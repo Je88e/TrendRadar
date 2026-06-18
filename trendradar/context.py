@@ -32,6 +32,7 @@ from trendradar.report import (
     generate_html_report,
     render_html_content,
 )
+from trendradar.report.region import build_region_map_payload
 from trendradar.notification import (
     render_feishu_content,
     render_dingtalk_content,
@@ -40,6 +41,8 @@ from trendradar.notification import (
 )
 from trendradar.ai import AITranslator
 from trendradar.ai.filter import AIFilter, AIFilterResult
+from trendradar.ai.region import RegionClassifier
+from trendradar.regions.normalizer import RegionNormalizer
 from trendradar.storage import get_storage_manager
 
 
@@ -75,6 +78,8 @@ class AppContext:
         self.config = config
         self._storage_manager = None
         self._scheduler = None
+        self._region_classifier = None
+        self._region_normalizer = None
 
     # === 配置访问 ===
 
@@ -153,6 +158,78 @@ class AppContext:
     def ai_filter_enabled(self) -> bool:
         """AI 筛选是否启用（基于 filter.method 判断）"""
         return self.filter_method == "ai"
+
+    @property
+    def region_classify_config(self) -> Dict:
+        """获取地区分类配置"""
+        return self.config.get("REGION_CLASSIFY", {})
+
+    @property
+    def region_classify_enabled(self) -> bool:
+        """地区分类是否启用（opt-in，默认关）"""
+        return self.region_classify_config.get("ENABLED", False)
+
+    @property
+    def region_map_enabled(self) -> bool:
+        """报告 region_map 区是否显示（display 层开关，默认关）"""
+        return self.config.get("DISPLAY", {}).get("REGIONS", {}).get("REGION_MAP", False)
+
+    def get_region_classifier(self) -> Optional[RegionClassifier]:
+        """懒构造 RegionClassifier 单例（注入 normalizer + country_list）。
+
+        开关关闭 → 返回 None，不构造（零成本）。
+        normalizer 从内置数据资产加载；country_list 由全量国家全称拼接，
+        注入提示词 {country_list} 占位。
+        """
+        if not self.region_classify_enabled:
+            return None
+
+        if self._region_classifier is None:
+            # 用 normalizer.py 同级 data/ 目录
+            from trendradar.regions import normalizer as _norm_mod
+            data_dir = Path(_norm_mod.__file__).parent / "data"
+            normalizer = RegionNormalizer.from_data_dir(data_dir)
+
+            # country_list：全量国家全称（逗号分隔），约束 AI 出规范国名
+            import json
+            countries = json.loads((data_dir / "countries.json").read_text(encoding="utf-8"))
+            country_list = "、".join(c["name"] for c in countries)
+
+            rc = self.region_classify_config
+            self._region_classifier = RegionClassifier(
+                ai_config=self.config.get("AI", {}),
+                normalizer=normalizer,
+                region_classify_config=rc,
+                get_time_func=lambda: self.get_time().isoformat(),
+                country_list=country_list,
+                debug=self.config.get("DEBUG", False),
+            )
+        return self._region_classifier
+
+    def _get_region_normalizer(self) -> RegionNormalizer:
+        """懒构造归一化器单例（纯数据资产，不依赖 region_classify 开关）。
+
+        地区地图展示层（region_map）可能独立于分类开关启用，展示历史结果，
+        故单独构造，避免与 get_region_classifier 的 enabled 门控耦合。
+        """
+        if self._region_normalizer is None:
+            from trendradar.regions import normalizer as _norm_mod
+            data_dir = Path(_norm_mod.__file__).parent / "data"
+            self._region_normalizer = RegionNormalizer.from_data_dir(data_dir)
+        return self._region_normalizer
+
+    def get_region_map_payload(self) -> Optional[Dict[str, Any]]:
+        """构建地区地图 payload（design 6.1 树），供 HTML 渲染。
+
+        开关关（region_map_enabled=False）→ None（不渲染该区）。
+        否则从 storage 取 active 结果树 + 注入 echarts 世界名映射，构建 payload。
+        """
+        if not self.region_map_enabled:
+            return None
+        storage = self.get_storage_manager()
+        active = storage.get_active_region_classify_results()
+        echarts_names = self._get_region_normalizer().get_country_echarts_map()
+        return build_region_map_payload(active, echarts_names=echarts_names)
 
     # === 时间操作 ===
 
@@ -320,6 +397,7 @@ class AppContext:
         frequency_file: Optional[str] = None,
         report_metadata: Optional[Dict] = None,
         translate_report_func: Optional[Any] = None,
+        region_map: Optional[Dict[str, Any]] = None,
     ) -> str:
         """生成HTML报告"""
         return generate_html_report(
@@ -334,7 +412,7 @@ class AppContext:
             output_dir="output",
             date_folder=self.format_date(),
             time_filename=self.format_time(),
-            render_html_func=lambda *args, **kwargs: self.render_html(*args, rss_items=rss_items, rss_new_items=rss_new_items, ai_analysis=ai_analysis, standalone_data=standalone_data, **kwargs),
+            render_html_func=lambda *args, **kwargs: self.render_html(*args, rss_items=rss_items, rss_new_items=rss_new_items, ai_analysis=ai_analysis, standalone_data=standalone_data, region_map=region_map, **kwargs),
             report_metadata=report_metadata,
             translate_report_func=translate_report_func,
         )
@@ -349,6 +427,7 @@ class AppContext:
         rss_new_items: Optional[List[Dict]] = None,
         ai_analysis: Optional[Any] = None,
         standalone_data: Optional[Dict] = None,
+        region_map: Optional[Dict[str, Any]] = None,
     ) -> str:
         """渲染HTML内容"""
         return render_html_content(
@@ -364,6 +443,7 @@ class AppContext:
             ai_analysis=ai_analysis,
             show_new_section=self.show_new_section,
             standalone_data=standalone_data,
+            region_map=region_map,
         )
 
     # === 通知内容渲染 ===
@@ -928,6 +1008,113 @@ class AppContext:
             total_processed=total_processed,
             success=True,
         )
+
+    # === 地区分类 ===
+
+    def run_region_classify(self) -> Optional[Dict[str, List[Dict]]]:
+        """执行地区分类完整流程（gated by region_classify_enabled）。
+
+        1. 收集 hotlist + rss 新闻（含新鲜度过滤）
+        2. content_hash 去重（标题变更触发重分类，见 ADR-0002）
+        3. 批量调 AI 分类（RegionClassifier.classify_batch）
+        4. 落库（UPSERT）+ 标记已分析
+        5. 返回 active 结果树（供报告渲染）
+
+        开关关闭 → None。失败批次不标记已分析，下次重试。
+        """
+        if not self.region_classify_enabled:
+            return None
+
+        import hashlib
+
+        classifier = self.get_region_classifier()
+        storage = self.get_storage_manager()
+        date = self.format_date()
+        rc = self.region_classify_config
+        batch_size = rc.get("BATCH_SIZE", 200)
+        batch_interval = rc.get("BATCH_INTERVAL", 1)
+
+        # 1. 收集 hotlist
+        all_hotlist = storage.get_all_news_ids()
+        analyzed_hotlist = storage.get_region_classify_analyzed("hotlist")
+        # 去重：hash 不同（标题变更/未分析）才分类
+        pending_hotlist = [
+            n for n in all_hotlist
+            if analyzed_hotlist.get(n["id"]) != hashlib.md5(
+                n["title"].encode("utf-8")).hexdigest()
+        ]
+
+        # RSS（含新鲜度过滤，与 ai_filter 一致）
+        pending_rss = []
+        if self.rss_enabled:
+            all_rss = storage.get_all_rss_ids()
+            analyzed_rss = storage.get_region_classify_analyzed("rss")
+            pending_rss = [
+                n for n in all_rss
+                if analyzed_rss.get(n["id"]) != hashlib.md5(
+                    n["title"].encode("utf-8")).hexdigest()
+            ]
+
+        total_pending = len(pending_hotlist) + len(pending_rss)
+        print(f"[RegionClassify] 热榜待分类 {len(pending_hotlist)} 条, RSS 待分类 {len(pending_rss)} 条")
+
+        if total_pending == 0:
+            print("[RegionClassify] 没有新增新闻需要分类")
+
+        # 2. 批量分类
+        import time as _time
+        all_results: List[Dict] = []
+        analyzed_records: List[tuple] = []  # (news_id, source_type, content_hash, level)
+
+        def _process(source_type: str, pending: List[Dict]) -> None:
+            batch_count = 0
+            for i in range(0, len(pending), batch_size):
+                if batch_count > 0 and batch_interval > 0:
+                    print(f"[RegionClassify] 批次间隔等待 {batch_interval} 秒...")
+                    _time.sleep(batch_interval)
+                batch = pending[i:i + batch_size]
+                titles_for_ai = [
+                    {"id": n["id"], "title": n["title"],
+                     "source": n.get("source_name", "")}
+                    for n in batch
+                ]
+                batch_results = classifier.classify_batch(titles_for_ai)
+                batch_count += 1
+                if batch_results is None:
+                    # 调用失败：不标记该批次，留待下次重试
+                    print(f"[RegionClassify] {source_type} 批次 {batch_count}: "
+                          f"{len(batch)} 条 → 分类失败，将在下次运行重试")
+                    continue
+                for r in batch_results:
+                    r["source_type"] = source_type
+                all_results.extend(batch_results)
+                # 标记已分析（全部成功分类的 id，含 unknown）
+                for n in batch:
+                    chash = hashlib.md5(n["title"].encode("utf-8")).hexdigest()
+                    level = next(
+                        (r["level"] for r in batch_results if r["id"] == n["id"]),
+                        "unknown",
+                    )
+                    analyzed_records.append((n["id"], source_type, chash, level))
+                print(f"[RegionClassify] {source_type} 批次 {batch_count}: "
+                      f"{len(batch)} 条 → {len(batch_results)} 条分类")
+
+        _process("hotlist", pending_hotlist)
+        _process("rss", pending_rss)
+
+        # 3. 落库 + 标记已分析
+        if all_results:
+            saved = storage.save_region_classify_results(all_results)
+            print(f"[RegionClassify] 保存 {saved} 条分类结果")
+
+        if analyzed_records:
+            marked = storage.mark_region_classify_analyzed(
+                analyzed_records, source_type="hotlist"  # records 自带 source_type
+            )
+            print(f"[RegionClassify] 标记 {marked} 条已分析")
+
+        # 4. 返回 active 结果树（供报告渲染）
+        return storage.get_active_region_classify_results()
 
     def convert_ai_filter_to_report_data(
         self,

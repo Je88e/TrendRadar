@@ -875,6 +875,13 @@ class NewsAnalyzer:
                 standalone_data=standalone_data
             )
 
+        # 地区分类（如果启用）— 分类已抓取的新闻并落库，供报告地区地图区渲染
+        if self.ctx.region_classify_enabled:
+            try:
+                self.ctx.run_region_classify()
+            except Exception as e:
+                print(f"[RegionClassify] 执行失败（不影响主流程）：{e}")
+
         # 翻译 RSS 和独立展示区内容（如果启用）— 在 HTML 生成前执行，确保网页版也能展示翻译内容
         # standalone_data 在此翻译一次后贯穿到推送阶段复用，避免重复翻译并保证网页与推送译文一致
         # 热榜翻译在推送时由 dispatch_all 处理 report_data
@@ -910,6 +917,8 @@ class NewsAnalyzer:
             display_regions = self.ctx.config.get("DISPLAY", {}).get("REGIONS", {})
             html_standalone = standalone_data if display_regions.get("STANDALONE", False) else None
             html_ai = ai_result if display_regions.get("AI_ANALYSIS", True) else None
+            # 地区地图 payload（region_map 开关关 → None，不渲染该区）
+            html_region_map = self.ctx.get_region_map_payload()
             html_file = self.ctx.generate_html(
                 stats,
                 total_titles,
@@ -932,6 +941,7 @@ class NewsAnalyzer:
                     "rss_source_failed": self._rss_source_failed,
                 },
                 translate_report_func=translate_report_func,
+                region_map=html_region_map,
             )
 
         return stats, html_file, ai_result, rss_items, standalone_data, rss_new_items

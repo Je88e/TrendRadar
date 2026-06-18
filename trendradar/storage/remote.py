@@ -516,6 +516,26 @@ class RemoteStorageBackend(SQLiteStorageMixin, StorageBackend):
     def get_active_ai_filter_results(self, date=None, interests_file="ai_interests.txt"):
         return self._get_active_filter_results_impl(date, interests_file)
 
+    # === 地区分类 ===
+
+    def get_region_classify_analyzed(self, source_type="hotlist", date=None):
+        return self._get_region_classify_analyzed_impl(date, source_type)
+
+    def save_region_classify_results(self, results, date=None):
+        count = self._save_region_classify_results_impl(date, results)
+        if count > 0:
+            self._upload_sqlite(date)
+        return count
+
+    def mark_region_classify_analyzed(self, records, source_type="hotlist", date=None):
+        count = self._mark_region_classify_analyzed_impl(date, records, source_type)
+        if count > 0:
+            self._upload_sqlite(date)
+        return count
+
+    def get_active_region_classify_results(self, date=None):
+        return self._get_active_region_classify_results_impl(date)
+
     def deprecate_specific_ai_filter_tags(self, tag_ids, date=None):
         count = self._deprecate_specific_tags_impl(date, tag_ids)
         if count > 0:

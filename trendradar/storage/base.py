@@ -526,6 +526,24 @@ class StorageBackend(ABC):
     def get_all_rss_ids(self, date: Optional[str] = None) -> List[Dict]:
         return []
 
+    # === 地区分类（region_classify）===
+
+    def get_region_classify_analyzed(self, source_type: str = "hotlist", date: Optional[str] = None) -> Dict[int, str]:
+        """获取已分析新闻的 content_hash 映射（news_id → hash），用于去重。"""
+        return {}
+
+    def save_region_classify_results(self, results: List[Dict], date: Optional[str] = None) -> int:
+        """批量保存地区分类结果（UPSERT）。"""
+        return 0
+
+    def mark_region_classify_analyzed(self, records: List[tuple], source_type: str = "hotlist", date: Optional[str] = None) -> int:
+        """标记新闻已分析（去重缓存）。records: [(news_id, source_type, content_hash, level), ...]"""
+        return 0
+
+    def get_active_region_classify_results(self, date: Optional[str] = None) -> Dict[str, List[Dict]]:
+        """获取 active 地区分类结果（JOIN news 详情），返回 {"hotlist": [...], "rss": [...]}。"""
+        return {"hotlist": [], "rss": []}
+
 
 def convert_crawl_results_to_news_data(
     results: Dict[str, Dict],

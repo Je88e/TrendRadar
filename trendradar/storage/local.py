@@ -282,6 +282,20 @@ class LocalStorageBackend(SQLiteStorageMixin, StorageBackend):
     def get_all_rss_ids(self, date=None):
         return self._get_all_rss_ids_impl(date)
 
+    # === 地区分类 ===
+
+    def get_region_classify_analyzed(self, source_type="hotlist", date=None):
+        return self._get_region_classify_analyzed_impl(date, source_type)
+
+    def save_region_classify_results(self, results, date=None):
+        return self._save_region_classify_results_impl(date, results)
+
+    def mark_region_classify_analyzed(self, records, source_type="hotlist", date=None):
+        return self._mark_region_classify_analyzed_impl(date, records, source_type)
+
+    def get_active_region_classify_results(self, date=None):
+        return self._get_active_region_classify_results_impl(date)
+
     # ========================================
     # 本地特有功能：TXT/HTML 快照
     # ========================================

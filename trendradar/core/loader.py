@@ -227,13 +227,20 @@ def _load_display_config(config_data: Dict) -> Dict:
     regions = display.get("regions", {})
     standalone = display.get("standalone", {})
 
+    # region_map 开关：默认 false（opt-in，与 region_classify.enabled 解耦显示层判断）
+    region_map_enabled = regions.get("region_map", False)
+
     # 默认区域顺序
     default_region_order = ["hotlist", "rss", "new_items", "standalone", "ai_analysis"]
     region_order = display.get("region_order", default_region_order)
 
     # 验证 region_order 中的值是否合法
-    valid_regions = {"hotlist", "rss", "new_items", "standalone", "ai_analysis"}
+    valid_regions = {"hotlist", "rss", "new_items", "standalone", "ai_analysis", "region_map"}
     region_order = [r for r in region_order if r in valid_regions]
+
+    # region_map 开关关 → 从顺序中移除（视作 false）
+    if not region_map_enabled:
+        region_order = [r for r in region_order if r != "region_map"]
 
     # 如果过滤后为空，使用默认顺序
     if not region_order:
@@ -249,6 +256,7 @@ def _load_display_config(config_data: Dict) -> Dict:
             "RSS": regions.get("rss", True),
             "STANDALONE": regions.get("standalone", False),
             "AI_ANALYSIS": regions.get("ai_analysis", True),
+            "REGION_MAP": region_map_enabled,
         },
         # 独立展示区配置
         "STANDALONE": {
@@ -334,6 +342,22 @@ def _load_ai_filter_config(config_data: Dict) -> Dict:
         "UPDATE_TAGS_PROMPT_FILE": ai_filter.get("update_tags_prompt_file", "update_tags_prompt.txt"),
         "RECLASSIFY_THRESHOLD": ai_filter.get("reclassify_threshold", 0.6),
         "MIN_SCORE": float(ai_filter.get("min_score", 0)),
+    }
+
+
+def _load_region_classify_config(config_data: Dict) -> Dict:
+    """加载地区分类配置（默认关闭，opt-in）。
+
+    与 _load_ai_filter_config 同构：大写键，环境变量优先。
+    """
+    rc = config_data.get("region_classify", {})
+    enabled_env = _get_env_bool("REGION_CLASSIFY_ENABLED")
+
+    return {
+        "ENABLED": enabled_env if enabled_env is not None else rc.get("enabled", False),
+        "BATCH_SIZE": rc.get("batch_size", 200),
+        "BATCH_INTERVAL": rc.get("batch_interval", 2),
+        "PROMPT_FILE": rc.get("prompt_file", "prompt.txt"),
     }
 
 
@@ -593,6 +617,9 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 
     # AI 智能筛选配置
     config["AI_FILTER"] = _load_ai_filter_config(config_data)
+
+    # 地区分类配置
+    config["REGION_CLASSIFY"] = _load_region_classify_config(config_data)
 
     # 筛选策略配置
     config["FILTER"] = _load_filter_config(config_data)

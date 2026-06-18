@@ -323,6 +323,24 @@ class StorageManager:
         """保存分类结果"""
         return self.get_backend().save_ai_filter_results(results, date)
 
+    # === 地区分类 ===
+
+    def get_region_classify_analyzed(self, source_type="hotlist", date=None):
+        """获取已分析新闻的 content_hash 映射（去重）"""
+        return self.get_backend().get_region_classify_analyzed(source_type, date)
+
+    def save_region_classify_results(self, results, date=None):
+        """保存地区分类结果（UPSERT）"""
+        return self.get_backend().save_region_classify_results(results, date)
+
+    def mark_region_classify_analyzed(self, records, source_type="hotlist", date=None):
+        """标记新闻已分析（去重缓存）"""
+        return self.get_backend().mark_region_classify_analyzed(records, source_type, date)
+
+    def get_active_region_classify_results(self, date=None):
+        """获取 active 地区分类结果（JOIN news 详情）"""
+        return self.get_backend().get_active_region_classify_results(date)
+
     def get_active_ai_filter_results(self, date=None, interests_file="ai_interests.txt"):
         """获取指定兴趣文件的 active 分类结果"""
         return self.get_backend().get_active_ai_filter_results(date, interests_file)

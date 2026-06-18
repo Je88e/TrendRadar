@@ -183,6 +183,8 @@ def split_content_into_batches(
     """
     if region_order is None:
         region_order = DEFAULT_REGION_ORDER
+    # 地区地图仅 web，不进通知
+    region_order = [r for r in region_order if r != "region_map"]
     # 合并批次大小配置
     sizes = {**DEFAULT_BATCH_SIZES, **(batch_sizes or {})}
 

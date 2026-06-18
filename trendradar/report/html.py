@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Callable
 
 from trendradar.report.helpers import html_escape, calculate_rank_trend
+from trendradar.report.region import render_region_map_html
 from trendradar.utils.time import convert_time_for_display
 from trendradar.ai.formatter import render_ai_analysis_html_rich
 
@@ -27,6 +28,7 @@ def render_html_content(
     standalone_data: Optional[Dict] = None,
     ai_analysis: Optional[Any] = None,
     show_new_section: bool = True,
+    region_map: Optional[Dict[str, Any]] = None,
 ) -> str:
     """渲染HTML内容
 
@@ -43,6 +45,7 @@ def render_html_content(
         standalone_data: 独立展示区数据（可选），包含 platforms 和 rss_feeds
         ai_analysis: AI 分析结果对象（可选），AIAnalysisResult 实例
         show_new_section: 是否显示新增热点区域
+        region_map: 地区地图 payload（可选，design 6.1 树）；None 或空树时不渲染该区
 
     Returns:
         渲染后的 HTML 字符串
@@ -2141,6 +2144,9 @@ def render_html_content(
     # 生成 AI 分析 HTML
     ai_html = render_ai_analysis_html_rich(ai_analysis) if ai_analysis else ""
 
+    # 生成地区地图 HTML（payload 为 None/空树时 render_region_map_html 返回空串）
+    region_map_html = render_region_map_html(region_map) if region_map else ""
+
     # 准备各区域内容映射
     region_contents = {
         "hotlist": stats_html,
@@ -2148,6 +2154,7 @@ def render_html_content(
         "new_items": (new_titles_html, rss_new_html),  # 元组，分别处理
         "standalone": standalone_html,
         "ai_analysis": ai_html,
+        "region_map": region_map_html,
     }
 
     def add_section_divider(content: str) -> str:

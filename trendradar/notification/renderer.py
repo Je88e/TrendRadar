@@ -14,6 +14,9 @@ from trendradar.report.formatter import format_title_for_platform
 # 默认区域顺序
 DEFAULT_REGION_ORDER = ["hotlist", "rss", "new_items", "standalone", "ai_analysis"]
 
+# 仅 HTML 报告渲染、不进通知的区域（地区地图为交互式 ECharts，通知不可承载）
+NOTIFICATION_EXCLUDED_REGIONS = {"region_map"}
+
 
 def render_feishu_content(
     report_data: Dict,
@@ -42,6 +45,8 @@ def render_feishu_content(
     """
     if region_order is None:
         region_order = DEFAULT_REGION_ORDER
+    # 地区地图仅 web，不进通知
+    region_order = [r for r in region_order if r not in NOTIFICATION_EXCLUDED_REGIONS]
 
     # 生成热点词汇统计部分
     stats_content = ""
@@ -172,6 +177,8 @@ def render_dingtalk_content(
     """
     if region_order is None:
         region_order = DEFAULT_REGION_ORDER
+    # 地区地图仅 web，不进通知
+    region_order = [r for r in region_order if r not in NOTIFICATION_EXCLUDED_REGIONS]
 
     total_titles = sum(
         len(stat["titles"]) for stat in report_data["stats"] if stat["count"] > 0

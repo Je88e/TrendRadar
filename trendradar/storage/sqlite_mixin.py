@@ -72,6 +72,10 @@ class SQLiteStorageMixin:
         """获取 AI 筛选 schema 文件路径"""
         return Path(__file__).parent / "ai_filter_schema.sql"
 
+    def _get_region_classify_schema_path(self) -> Path:
+        """获取地区分类 schema 文件路径"""
+        return Path(__file__).parent / "region_classify_schema.sql"
+
     def _init_tables(self, conn: sqlite3.Connection, db_type: str = "news") -> None:
         """
         从 schema.sql 初始化数据库表结构
@@ -94,6 +98,12 @@ class SQLiteStorageMixin:
             ai_filter_schema = self._get_ai_filter_schema_path()
             if ai_filter_schema.exists():
                 with open(ai_filter_schema, "r", encoding="utf-8") as f:
+                    conn.executescript(f.read())
+
+            # 地区分类表结构（CREATE TABLE IF NOT EXISTS，幂等）
+            region_classify_schema = self._get_region_classify_schema_path()
+            if region_classify_schema.exists():
+                with open(region_classify_schema, "r", encoding="utf-8") as f:
                     conn.executescript(f.read())
 
         if db_type == "rss":
@@ -1763,3 +1773,239 @@ class SQLiteStorageMixin:
         except Exception as e:
             print(f"[AI筛选] 获取 RSS 列表失败: {e}")
             return []
+
+    # ========================================
+    # 地区分类（region_classify）
+    # 详见 docs/region-classify-design.md §3
+    # 单地区/新闻（UNIQUE news_item_id+source_type），内容绑定去重缓存
+    # ========================================
+
+    def _get_region_classify_analyzed_impl(
+        self, date: Optional[str] = None, source_type: str = "hotlist"
+    ) -> Dict[int, str]:
+        """获取已分析新闻的 content_hash 映射（news_id → hash），用于去重。
+
+        标题变更（hash 变）→ 视为未分析 → 重分类。
+        """
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT news_item_id, content_hash FROM region_classify_analyzed_news
+                WHERE source_type = ?
+            """, (source_type,))
+            return {row[0]: row[1] for row in cursor.fetchall()}
+        except Exception as e:
+            print(f"[RegionClassify] 获取已分析记录失败: {e}")
+            return {}
+
+    def _save_region_classify_results_impl(
+        self, date: Optional[str], results: List[Dict]
+    ) -> int:
+        """批量保存地区分类结果（UPSERT：同 news+source 覆盖）。
+
+        results 项字段（由 RegionClassifier._parse_response 产出）：
+            id(=news_item_id), source_type, level, country, country_code,
+            country_echarts, province, province_adcode, city, city_adcode, confidence
+        """
+        if not results:
+            return 0
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+            now_str = self._get_configured_time().strftime("%Y-%m-%d %H:%M:%S")
+
+            count = 0
+            for r in results:
+                try:
+                    cursor.execute("""
+                        INSERT INTO region_classify_results
+                            (news_item_id, source_type, level, country, country_code,
+                             province, province_adcode, city, city_adcode, confidence,
+                             status, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
+                        ON CONFLICT(news_item_id, source_type) DO UPDATE SET
+                            level=excluded.level, country=excluded.country,
+                            country_code=excluded.country_code,
+                            province=excluded.province, province_adcode=excluded.province_adcode,
+                            city=excluded.city, city_adcode=excluded.city_adcode,
+                            confidence=excluded.confidence, status='active',
+                            deprecated_at=NULL
+                    """, (
+                        r["id"],
+                        r.get("source_type", "hotlist"),
+                        r["level"],
+                        r.get("country"),
+                        r.get("country_code"),
+                        r.get("province"),
+                        r.get("province_adcode"),
+                        r.get("city"),
+                        r.get("city_adcode"),
+                        r.get("confidence", 0.0),
+                        now_str,
+                    ))
+                    count += 1
+                except Exception:
+                    pass
+
+            conn.commit()
+            return count
+        except Exception as e:
+            print(f"[RegionClassify] 保存分类结果失败: {e}")
+            return 0
+
+    def _mark_region_classify_analyzed_impl(
+        self, date: Optional[str],
+        records: List[tuple], source_type: str = "hotlist"
+    ) -> int:
+        """标记新闻已分析（news_id+hash+level，用于去重）。
+
+        records: [(news_item_id, source_type, content_hash, level), ...]
+        """
+        if not records:
+            return 0
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+            now_str = self._get_configured_time().strftime("%Y-%m-%d %H:%M:%S")
+
+            count = 0
+            for rec in records:
+                try:
+                    nid, src, chash, level = rec[0], rec[1], rec[2], rec[3]
+                    cursor.execute("""
+                        INSERT INTO region_classify_analyzed_news
+                            (news_item_id, source_type, content_hash, level, created_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        ON CONFLICT(news_item_id, source_type) DO UPDATE SET
+                            content_hash=excluded.content_hash,
+                            level=excluded.level, created_at=excluded.created_at
+                    """, (nid, src, chash, level, now_str))
+                    count += 1
+                except Exception:
+                    pass
+
+            conn.commit()
+            return count
+        except Exception as e:
+            print(f"[RegionClassify] 标记已分析失败: {e}")
+            return 0
+
+    def _get_active_region_classify_results_impl(
+        self, date: Optional[str] = None
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """获取 active 地区分类结果，JOIN news_items 取详情。
+
+        返回 {"hotlist": [...], "rss": [...]}（rss 库不存在则省略）。
+        每项含地区字段 + news 详情（title/url/source_name/rank/...）。
+        """
+        result: Dict[str, List[Dict[str, Any]]] = {}
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+
+            # 热榜
+            cursor.execute("""
+                SELECT
+                    r.news_item_id, r.source_type, r.level, r.confidence,
+                    r.country, r.country_code, r.province, r.province_adcode,
+                    r.city, r.city_adcode,
+                    n.title, n.platform_id as source_id, p.name as source_name,
+                    n.url, n.mobile_url, n.rank,
+                    n.first_crawl_time, n.last_crawl_time, n.crawl_count
+                FROM region_classify_results r
+                JOIN news_items n ON r.news_item_id = n.id
+                LEFT JOIN platforms p ON n.platform_id = p.id
+                WHERE r.status = 'active' AND r.source_type = 'hotlist'
+                ORDER BY r.confidence DESC, r.news_item_id
+            """)
+            hotlist = []
+            hotlist_ids = []
+            for row in cursor.fetchall():
+                hotlist.append({
+                    "news_item_id": row[0], "source_type": row[1],
+                    "level": row[2], "confidence": row[3],
+                    "country": row[4], "country_code": row[5],
+                    "province": row[6], "province_adcode": row[7],
+                    "city": row[8], "city_adcode": row[9],
+                    "title": row[10], "source_id": row[11],
+                    "source_name": row[12] or row[11],
+                    "url": row[13] or "", "mobile_url": row[14] or "",
+                    "rank": row[15],
+                    "first_time": row[16], "last_time": row[17],
+                    "count": row[18],
+                })
+                hotlist_ids.append(row[0])
+            result["hotlist"] = hotlist
+
+            # 批量取热榜 rank 历史
+            ranks_map: Dict[int, List[int]] = {}
+            if hotlist_ids:
+                unique_ids = list(set(hotlist_ids))
+                placeholders = ",".join("?" * len(unique_ids))
+                cursor.execute(f"""
+                    SELECT news_item_id, rank FROM rank_history
+                    WHERE news_item_id IN ({placeholders})
+                    ORDER BY news_item_id, crawl_time
+                """, unique_ids)
+                for rh_row in cursor.fetchall():
+                    nid, rank = rh_row[0], rh_row[1]
+                    if rank != 0:
+                        ranks_map.setdefault(nid, [])
+                        if rank not in ranks_map[nid]:
+                            ranks_map[nid].append(rank)
+            for item in hotlist:
+                item["ranks"] = ranks_map.get(item["news_item_id"], [item["rank"]])
+
+            # RSS（rss 库存在时）
+            try:
+                rss_conn = self._get_connection(date, db_type="rss")
+                rss_cursor = rss_conn.cursor()
+
+                cursor.execute("""
+                    SELECT r.news_item_id, r.level, r.confidence,
+                           r.country, r.country_code, r.province, r.province_adcode,
+                           r.city, r.city_adcode
+                    FROM region_classify_results r
+                    WHERE r.status = 'active' AND r.source_type = 'rss'
+                    ORDER BY r.confidence DESC, r.news_item_id
+                """)
+                rss_rows = cursor.fetchall()
+                if rss_rows:
+                    rss_ids = [row[0] for row in rss_rows]
+                    placeholders = ",".join("?" * len(rss_ids))
+                    rss_cursor.execute(f"""
+                        SELECT i.id, i.title, i.feed_id, f.name as feed_name,
+                               i.url, i.published_at
+                        FROM rss_items i
+                        LEFT JOIN rss_feeds f ON i.feed_id = f.id
+                        WHERE i.id IN ({placeholders})
+                    """, rss_ids)
+                    rss_info = {row[0]: row for row in rss_cursor.fetchall()}
+
+                    rss_list = []
+                    for rrow in rss_rows:
+                        nid = rrow[0]
+                        info = rss_info.get(nid)
+                        rss_list.append({
+                            "news_item_id": nid, "source_type": "rss",
+                            "level": rrow[1], "confidence": rrow[2],
+                            "country": rrow[3], "country_code": rrow[4],
+                            "province": rrow[5], "province_adcode": rrow[6],
+                            "city": rrow[7], "city_adcode": rrow[8],
+                            "title": info[1] if info else "",
+                            "source_id": info[2] if info else "",
+                            "source_name": (info[3] if info and info[3] else (info[2] if info else "")),
+                            "url": (info[4] if info else "") or "",
+                            "published_at": (info[5] if info else "") or "",
+                            "rank": None, "ranks": [],
+                            "first_time": "", "last_time": "", "count": 1,
+                        })
+                    result["rss"] = rss_list
+            except Exception:
+                pass
+
+            return result
+        except Exception as e:
+            print(f"[RegionClassify] 获取 active 结果失败: {e}")
+            return {"hotlist": [], "rss": []}

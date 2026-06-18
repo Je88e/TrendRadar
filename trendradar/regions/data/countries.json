@@ -1,0 +1,1854 @@
+[
+  {
+    "code": "BT",
+    "name": "不丹",
+    "echarts_name": "Bhutan",
+    "aliases": [
+      "不丹王国"
+    ]
+  },
+  {
+    "code": "TL",
+    "name": "东帝汶",
+    "echarts_name": "Timor-Leste",
+    "aliases": [
+      "东帝汶民主共和国"
+    ]
+  },
+  {
+    "code": "CN",
+    "name": "中国",
+    "echarts_name": "China",
+    "aliases": [
+      "中华人民共和国"
+    ]
+  },
+  {
+    "code": "CF",
+    "name": "中非共和国",
+    "echarts_name": "Central African Rep.",
+    "aliases": []
+  },
+  {
+    "code": "DK",
+    "name": "丹麦",
+    "echarts_name": "Denmark",
+    "aliases": [
+      "丹麦王国"
+    ]
+  },
+  {
+    "code": "UA",
+    "name": "乌克兰",
+    "echarts_name": "Ukraine",
+    "aliases": []
+  },
+  {
+    "code": "UZ",
+    "name": "乌兹别克斯坦",
+    "echarts_name": "Uzbekistan",
+    "aliases": [
+      "乌兹别克斯坦共和国"
+    ]
+  },
+  {
+    "code": "UG",
+    "name": "乌干达",
+    "echarts_name": "Uganda",
+    "aliases": [
+      "乌干达共和国"
+    ]
+  },
+  {
+    "code": "UY",
+    "name": "乌拉圭",
+    "echarts_name": "Uruguay",
+    "aliases": [
+      "乌拉圭东岸共和国"
+    ]
+  },
+  {
+    "code": "TD",
+    "name": "乍得",
+    "echarts_name": "Chad",
+    "aliases": [
+      "乍得共和国"
+    ]
+  },
+  {
+    "code": "YE",
+    "name": "也门",
+    "echarts_name": "Yemen",
+    "aliases": [
+      "也门共和国"
+    ]
+  },
+  {
+    "code": "AM",
+    "name": "亚美尼亚",
+    "echarts_name": "Armenia",
+    "aliases": [
+      "亚美尼亚共和国"
+    ]
+  },
+  {
+    "code": "IL",
+    "name": "以色列",
+    "echarts_name": "Israel",
+    "aliases": [
+      "以色列国"
+    ]
+  },
+  {
+    "code": "IQ",
+    "name": "伊拉克",
+    "echarts_name": "Iraq",
+    "aliases": [
+      "伊拉克共和国"
+    ]
+  },
+  {
+    "code": "IR",
+    "name": "伊朗",
+    "echarts_name": "Iran",
+    "aliases": [
+      "伊朗伊斯兰共和国"
+    ]
+  },
+  {
+    "code": "BZ",
+    "name": "伯利兹",
+    "echarts_name": "Belize",
+    "aliases": []
+  },
+  {
+    "code": "CV",
+    "name": "佛得角",
+    "echarts_name": "Cape Verde",
+    "aliases": [
+      "佛得角共和国"
+    ]
+  },
+  {
+    "code": "RU",
+    "name": "俄罗斯",
+    "echarts_name": "Russia",
+    "aliases": [
+      "俄罗斯联邦"
+    ]
+  },
+  {
+    "code": "BG",
+    "name": "保加利亚",
+    "echarts_name": "Bulgaria",
+    "aliases": [
+      "保加利亚共和国"
+    ]
+  },
+  {
+    "code": "HR",
+    "name": "克罗地亚",
+    "echarts_name": "Croatia",
+    "aliases": [
+      "克罗地亚共和国"
+    ]
+  },
+  {
+    "code": "GU",
+    "name": "关岛",
+    "echarts_name": "Guam",
+    "aliases": []
+  },
+  {
+    "code": "GM",
+    "name": "冈比亚",
+    "echarts_name": "Gambia",
+    "aliases": [
+      "冈比亚共和国"
+    ]
+  },
+  {
+    "code": "IS",
+    "name": "冰岛",
+    "echarts_name": "Iceland",
+    "aliases": []
+  },
+  {
+    "code": "GN",
+    "name": "几内亚",
+    "echarts_name": "Guinea",
+    "aliases": [
+      "几内亚共和国"
+    ]
+  },
+  {
+    "code": "GW",
+    "name": "几内亚比绍",
+    "echarts_name": "Guinea-Bissau",
+    "aliases": [
+      "几内亚比绍共和国"
+    ]
+  },
+  {
+    "code": "LI",
+    "name": "列支敦士登",
+    "echarts_name": "Liechtenstein",
+    "aliases": [
+      "列支敦士登公国"
+    ]
+  },
+  {
+    "code": "CG",
+    "name": "刚果",
+    "echarts_name": "Congo",
+    "aliases": [
+      "刚果共和国"
+    ]
+  },
+  {
+    "code": "LY",
+    "name": "利比亚",
+    "echarts_name": "Libya",
+    "aliases": [
+      "利比亚国"
+    ]
+  },
+  {
+    "code": "LR",
+    "name": "利比里亚",
+    "echarts_name": "Liberia",
+    "aliases": [
+      "利比里亚共和国"
+    ]
+  },
+  {
+    "code": "CA",
+    "name": "加拿大",
+    "echarts_name": "Canada",
+    "aliases": []
+  },
+  {
+    "code": "GH",
+    "name": "加纳",
+    "echarts_name": "Ghana",
+    "aliases": [
+      "加纳共和国"
+    ]
+  },
+  {
+    "code": "GA",
+    "name": "加蓬",
+    "echarts_name": "Gabon",
+    "aliases": [
+      "加蓬共和国"
+    ]
+  },
+  {
+    "code": "HU",
+    "name": "匈牙利",
+    "echarts_name": "Hungary",
+    "aliases": []
+  },
+  {
+    "code": "MK",
+    "name": "北馬其頓",
+    "echarts_name": "North Macedonia",
+    "aliases": [
+      "北馬其頓共和國"
+    ]
+  },
+  {
+    "code": "MP",
+    "name": "北马里亚纳群岛",
+    "echarts_name": "Northern Mariana Islands",
+    "aliases": []
+  },
+  {
+    "code": "GS",
+    "name": "南乔治亚",
+    "echarts_name": "South Georgia",
+    "aliases": [
+      "南乔治亚岛和南桑威奇群岛"
+    ]
+  },
+  {
+    "code": "AQ",
+    "name": "南极洲",
+    "echarts_name": "Antarctica",
+    "aliases": []
+  },
+  {
+    "code": "SS",
+    "name": "南苏丹",
+    "echarts_name": "South Sudan",
+    "aliases": [
+      "南苏丹共和国"
+    ]
+  },
+  {
+    "code": "ZA",
+    "name": "南非",
+    "echarts_name": "South Africa",
+    "aliases": [
+      "南非共和国"
+    ]
+  },
+  {
+    "code": "BW",
+    "name": "博茨瓦纳",
+    "echarts_name": "Botswana",
+    "aliases": [
+      "博茨瓦纳共和国"
+    ]
+  },
+  {
+    "code": "QA",
+    "name": "卡塔尔",
+    "echarts_name": "Qatar",
+    "aliases": [
+      "卡塔尔国"
+    ]
+  },
+  {
+    "code": "RW",
+    "name": "卢旺达",
+    "echarts_name": "Rwanda",
+    "aliases": [
+      "卢旺达共和国"
+    ]
+  },
+  {
+    "code": "LU",
+    "name": "卢森堡",
+    "echarts_name": "Luxembourg",
+    "aliases": [
+      "卢森堡大公国"
+    ]
+  },
+  {
+    "code": "IN",
+    "name": "印度",
+    "echarts_name": "India",
+    "aliases": [
+      "印度共和国"
+    ]
+  },
+  {
+    "code": "ID",
+    "name": "印度尼西亚",
+    "echarts_name": "Indonesia",
+    "aliases": [
+      "印度尼西亚共和国"
+    ]
+  },
+  {
+    "code": "GT",
+    "name": "危地马拉",
+    "echarts_name": "Guatemala",
+    "aliases": [
+      "危地马拉共和国"
+    ]
+  },
+  {
+    "code": "EC",
+    "name": "厄瓜多尔",
+    "echarts_name": "Ecuador",
+    "aliases": [
+      "厄瓜多尔共和国"
+    ]
+  },
+  {
+    "code": "ER",
+    "name": "厄立特里亚",
+    "echarts_name": "Eritrea",
+    "aliases": []
+  },
+  {
+    "code": "SY",
+    "name": "叙利亚",
+    "echarts_name": "Syria",
+    "aliases": [
+      "叙利亚阿拉伯共和国"
+    ]
+  },
+  {
+    "code": "CU",
+    "name": "古巴",
+    "echarts_name": "Cuba",
+    "aliases": [
+      "古巴共和国"
+    ]
+  },
+  {
+    "code": "TW",
+    "name": "台灣",
+    "echarts_name": "Taiwan",
+    "aliases": [
+      "中華民國"
+    ]
+  },
+  {
+    "code": "KG",
+    "name": "吉尔吉斯斯坦",
+    "echarts_name": "Kyrgyzstan",
+    "aliases": [
+      "吉尔吉斯斯坦共和国"
+    ]
+  },
+  {
+    "code": "DJ",
+    "name": "吉布提",
+    "echarts_name": "Djibouti",
+    "aliases": [
+      "吉布提共和国"
+    ]
+  },
+  {
+    "code": "KZ",
+    "name": "哈萨克斯坦",
+    "echarts_name": "Kazakhstan",
+    "aliases": [
+      "哈萨克斯坦共和国"
+    ]
+  },
+  {
+    "code": "CO",
+    "name": "哥伦比亚",
+    "echarts_name": "Colombia",
+    "aliases": [
+      "哥伦比亚共和国"
+    ]
+  },
+  {
+    "code": "CR",
+    "name": "哥斯达黎加",
+    "echarts_name": "Costa Rica",
+    "aliases": [
+      "哥斯达黎加共和国"
+    ]
+  },
+  {
+    "code": "CM",
+    "name": "喀麦隆",
+    "echarts_name": "Cameroon",
+    "aliases": [
+      "喀麦隆共和国"
+    ]
+  },
+  {
+    "code": "TV",
+    "name": "图瓦卢",
+    "echarts_name": "Tuvalu",
+    "aliases": []
+  },
+  {
+    "code": "TM",
+    "name": "土库曼斯坦",
+    "echarts_name": "Turkmenistan",
+    "aliases": []
+  },
+  {
+    "code": "TR",
+    "name": "土耳其",
+    "echarts_name": "Türkiye",
+    "aliases": [
+      "土耳其共和国"
+    ]
+  },
+  {
+    "code": "LC",
+    "name": "圣卢西亚",
+    "echarts_name": "Saint Lucia",
+    "aliases": []
+  },
+  {
+    "code": "KN",
+    "name": "圣基茨和尼维斯",
+    "echarts_name": "Saint Kitts and Nevis",
+    "aliases": [
+      "圣克里斯托弗和尼维斯联邦"
+    ]
+  },
+  {
+    "code": "ST",
+    "name": "圣多美和普林西比",
+    "echarts_name": "São Tomé and Príncipe",
+    "aliases": [
+      "圣多美和普林西比民主共和国"
+    ]
+  },
+  {
+    "code": "BL",
+    "name": "圣巴泰勒米",
+    "echarts_name": "Saint Barthélemy",
+    "aliases": [
+      "圣巴泰勒米集体"
+    ]
+  },
+  {
+    "code": "VC",
+    "name": "圣文森特和格林纳丁斯",
+    "echarts_name": "Saint Vincent and the Grenadines",
+    "aliases": []
+  },
+  {
+    "code": "PM",
+    "name": "圣皮埃尔和密克隆",
+    "echarts_name": "Saint Pierre and Miquelon",
+    "aliases": []
+  },
+  {
+    "code": "CX",
+    "name": "圣诞岛",
+    "echarts_name": "Christmas Island",
+    "aliases": []
+  },
+  {
+    "code": "SH",
+    "name": "圣赫勒拿、阿森松和特里斯坦-达库尼亚",
+    "echarts_name": "Saint Helena, Ascension and Tristan da Cunha",
+    "aliases": []
+  },
+  {
+    "code": "MF",
+    "name": "圣马丁",
+    "echarts_name": "Saint Martin",
+    "aliases": []
+  },
+  {
+    "code": "SX",
+    "name": "圣马丁岛",
+    "echarts_name": "Sint Maarten",
+    "aliases": []
+  },
+  {
+    "code": "SM",
+    "name": "圣马力诺",
+    "echarts_name": "San Marino",
+    "aliases": [
+      "圣马力诺共和国"
+    ]
+  },
+  {
+    "code": "GY",
+    "name": "圭亚那",
+    "echarts_name": "Guyana",
+    "aliases": [
+      "圭亚那共和国"
+    ]
+  },
+  {
+    "code": "TZ",
+    "name": "坦桑尼亚",
+    "echarts_name": "Tanzania",
+    "aliases": [
+      "坦桑尼亚联合共和国"
+    ]
+  },
+  {
+    "code": "EG",
+    "name": "埃及",
+    "echarts_name": "Egypt",
+    "aliases": [
+      "阿拉伯埃及共和国"
+    ]
+  },
+  {
+    "code": "ET",
+    "name": "埃塞俄比亚",
+    "echarts_name": "Ethiopia",
+    "aliases": [
+      "埃塞俄比亚联邦民主共和国"
+    ]
+  },
+  {
+    "code": "KI",
+    "name": "基里巴斯",
+    "echarts_name": "Kiribati",
+    "aliases": [
+      "基里巴斯共和国"
+    ]
+  },
+  {
+    "code": "TJ",
+    "name": "塔吉克斯坦",
+    "echarts_name": "Tajikistan",
+    "aliases": [
+      "塔吉克斯坦共和国"
+    ]
+  },
+  {
+    "code": "SN",
+    "name": "塞内加尔",
+    "echarts_name": "Senegal",
+    "aliases": [
+      "塞内加尔共和国"
+    ]
+  },
+  {
+    "code": "RS",
+    "name": "塞尔维亚",
+    "echarts_name": "Serbia",
+    "aliases": [
+      "塞尔维亚共和国"
+    ]
+  },
+  {
+    "code": "SL",
+    "name": "塞拉利昂",
+    "echarts_name": "Sierra Leone",
+    "aliases": [
+      "塞拉利昂共和国"
+    ]
+  },
+  {
+    "code": "CY",
+    "name": "塞浦路斯",
+    "echarts_name": "Cyprus",
+    "aliases": [
+      "塞浦路斯共和国"
+    ]
+  },
+  {
+    "code": "SC",
+    "name": "塞舌尔",
+    "echarts_name": "Seychelles",
+    "aliases": [
+      "塞舌尔共和国"
+    ]
+  },
+  {
+    "code": "MX",
+    "name": "墨西哥",
+    "echarts_name": "Mexico",
+    "aliases": [
+      "墨西哥合众国"
+    ]
+  },
+  {
+    "code": "TG",
+    "name": "多哥",
+    "echarts_name": "Togo",
+    "aliases": [
+      "多哥共和国"
+    ]
+  },
+  {
+    "code": "DO",
+    "name": "多明尼加",
+    "echarts_name": "Dominican Rep.",
+    "aliases": [
+      "多明尼加共和国"
+    ]
+  },
+  {
+    "code": "DM",
+    "name": "多米尼加",
+    "echarts_name": "Dominica",
+    "aliases": [
+      "多米尼加共和国"
+    ]
+  },
+  {
+    "code": "AX",
+    "name": "奥兰群岛",
+    "echarts_name": "Åland Islands",
+    "aliases": []
+  },
+  {
+    "code": "AT",
+    "name": "奥地利",
+    "echarts_name": "Austria",
+    "aliases": [
+      "奥地利共和国"
+    ]
+  },
+  {
+    "code": "VE",
+    "name": "委内瑞拉",
+    "echarts_name": "Venezuela",
+    "aliases": [
+      "委内瑞拉玻利瓦尔共和国"
+    ]
+  },
+  {
+    "code": "BD",
+    "name": "孟加拉国",
+    "echarts_name": "Bangladesh",
+    "aliases": [
+      "孟加拉人民共和国"
+    ]
+  },
+  {
+    "code": "AO",
+    "name": "安哥拉",
+    "echarts_name": "Angola",
+    "aliases": [
+      "安哥拉共和国"
+    ]
+  },
+  {
+    "code": "AI",
+    "name": "安圭拉",
+    "echarts_name": "Anguilla",
+    "aliases": []
+  },
+  {
+    "code": "AG",
+    "name": "安提瓜和巴布达",
+    "echarts_name": "Antigua and Barbuda",
+    "aliases": []
+  },
+  {
+    "code": "AD",
+    "name": "安道尔",
+    "echarts_name": "Andorra",
+    "aliases": [
+      "安道尔公国"
+    ]
+  },
+  {
+    "code": "FM",
+    "name": "密克罗尼西亚",
+    "echarts_name": "Micronesia",
+    "aliases": [
+      "密克罗尼西亚联邦"
+    ]
+  },
+  {
+    "code": "NI",
+    "name": "尼加拉瓜",
+    "echarts_name": "Nicaragua",
+    "aliases": [
+      "尼加拉瓜共和国"
+    ]
+  },
+  {
+    "code": "NG",
+    "name": "尼日利亚",
+    "echarts_name": "Nigeria",
+    "aliases": [
+      "尼日利亚联邦共和国"
+    ]
+  },
+  {
+    "code": "NE",
+    "name": "尼日尔",
+    "echarts_name": "Niger",
+    "aliases": [
+      "尼日尔共和国"
+    ]
+  },
+  {
+    "code": "NP",
+    "name": "尼泊尔",
+    "echarts_name": "Nepal",
+    "aliases": [
+      "尼泊尔联邦民主共和国"
+    ]
+  },
+  {
+    "code": "PS",
+    "name": "巴勒斯坦",
+    "echarts_name": "Palestine",
+    "aliases": [
+      "巴勒斯坦国"
+    ]
+  },
+  {
+    "code": "BS",
+    "name": "巴哈马",
+    "echarts_name": "Bahamas",
+    "aliases": [
+      "巴哈马联邦"
+    ]
+  },
+  {
+    "code": "PK",
+    "name": "巴基斯坦",
+    "echarts_name": "Pakistan",
+    "aliases": [
+      "巴基斯坦伊斯兰共和国"
+    ]
+  },
+  {
+    "code": "BB",
+    "name": "巴巴多斯",
+    "echarts_name": "Barbados",
+    "aliases": []
+  },
+  {
+    "code": "PG",
+    "name": "巴布亚新几内亚",
+    "echarts_name": "Papua New Guinea",
+    "aliases": []
+  },
+  {
+    "code": "PY",
+    "name": "巴拉圭",
+    "echarts_name": "Paraguay",
+    "aliases": [
+      "巴拉圭共和国"
+    ]
+  },
+  {
+    "code": "PA",
+    "name": "巴拿马",
+    "echarts_name": "Panama",
+    "aliases": [
+      "巴拿马共和国"
+    ]
+  },
+  {
+    "code": "BH",
+    "name": "巴林",
+    "echarts_name": "Bahrain",
+    "aliases": [
+      "巴林王国"
+    ]
+  },
+  {
+    "code": "BR",
+    "name": "巴西",
+    "echarts_name": "Brazil",
+    "aliases": [
+      "巴西联邦共和国"
+    ]
+  },
+  {
+    "code": "BF",
+    "name": "布基纳法索",
+    "echarts_name": "Burkina Faso",
+    "aliases": []
+  },
+  {
+    "code": "BV",
+    "name": "布维岛",
+    "echarts_name": "Bouvet Island",
+    "aliases": []
+  },
+  {
+    "code": "BI",
+    "name": "布隆迪",
+    "echarts_name": "Burundi",
+    "aliases": [
+      "布隆迪共和国"
+    ]
+  },
+  {
+    "code": "GR",
+    "name": "希腊",
+    "echarts_name": "Greece",
+    "aliases": [
+      "希腊共和国"
+    ]
+  },
+  {
+    "code": "PW",
+    "name": "帕劳",
+    "echarts_name": "Palau",
+    "aliases": [
+      "帕劳共和国"
+    ]
+  },
+  {
+    "code": "CK",
+    "name": "库克群岛",
+    "echarts_name": "Cook Islands",
+    "aliases": []
+  },
+  {
+    "code": "CW",
+    "name": "库拉索",
+    "echarts_name": "Curaçao",
+    "aliases": []
+  },
+  {
+    "code": "KY",
+    "name": "开曼群岛",
+    "echarts_name": "Cayman Islands",
+    "aliases": []
+  },
+  {
+    "code": "DE",
+    "name": "德国",
+    "echarts_name": "Germany",
+    "aliases": [
+      "德意志联邦共和国"
+    ]
+  },
+  {
+    "code": "IT",
+    "name": "意大利",
+    "echarts_name": "Italy",
+    "aliases": [
+      "意大利共和国"
+    ]
+  },
+  {
+    "code": "SB",
+    "name": "所罗门群岛",
+    "echarts_name": "Solomon Is.",
+    "aliases": []
+  },
+  {
+    "code": "TK",
+    "name": "托克劳",
+    "echarts_name": "Tokelau",
+    "aliases": []
+  },
+  {
+    "code": "LV",
+    "name": "拉脱维亚",
+    "echarts_name": "Latvia",
+    "aliases": [
+      "拉脱维亚共和国"
+    ]
+  },
+  {
+    "code": "NO",
+    "name": "挪威",
+    "echarts_name": "Norway",
+    "aliases": [
+      "挪威王国"
+    ]
+  },
+  {
+    "code": "CZ",
+    "name": "捷克",
+    "echarts_name": "Czech Rep.",
+    "aliases": [
+      "捷克共和国"
+    ]
+  },
+  {
+    "code": "MD",
+    "name": "摩尔多瓦",
+    "echarts_name": "Moldova",
+    "aliases": [
+      "摩尔多瓦共和国"
+    ]
+  },
+  {
+    "code": "MA",
+    "name": "摩洛哥",
+    "echarts_name": "Morocco",
+    "aliases": [
+      "摩洛哥王国"
+    ]
+  },
+  {
+    "code": "MC",
+    "name": "摩纳哥",
+    "echarts_name": "Monaco",
+    "aliases": [
+      "摩纳哥公国"
+    ]
+  },
+  {
+    "code": "BN",
+    "name": "文莱",
+    "echarts_name": "Brunei",
+    "aliases": [
+      "文莱和平之国"
+    ]
+  },
+  {
+    "code": "FJ",
+    "name": "斐济",
+    "echarts_name": "Fiji",
+    "aliases": [
+      "斐济共和国"
+    ]
+  },
+  {
+    "code": "SZ",
+    "name": "斯威士兰",
+    "echarts_name": "eSwatini",
+    "aliases": [
+      "斯威士兰王国"
+    ]
+  },
+  {
+    "code": "SK",
+    "name": "斯洛伐克",
+    "echarts_name": "Slovakia",
+    "aliases": [
+      "斯洛伐克共和国"
+    ]
+  },
+  {
+    "code": "SI",
+    "name": "斯洛文尼亚",
+    "echarts_name": "Slovenia",
+    "aliases": [
+      "斯洛文尼亚共和国"
+    ]
+  },
+  {
+    "code": "SJ",
+    "name": "斯瓦尔巴特",
+    "echarts_name": "Svalbard and Jan Mayen",
+    "aliases": []
+  },
+  {
+    "code": "LK",
+    "name": "斯里兰卡",
+    "echarts_name": "Sri Lanka",
+    "aliases": [
+      "斯里兰卡民主社会主义共和国"
+    ]
+  },
+  {
+    "code": "SG",
+    "name": "新加坡",
+    "echarts_name": "Singapore",
+    "aliases": [
+      "新加坡共和国"
+    ]
+  },
+  {
+    "code": "NC",
+    "name": "新喀里多尼亚",
+    "echarts_name": "New Caledonia",
+    "aliases": []
+  },
+  {
+    "code": "NZ",
+    "name": "新西兰",
+    "echarts_name": "New Zealand",
+    "aliases": []
+  },
+  {
+    "code": "JP",
+    "name": "日本",
+    "echarts_name": "Japan",
+    "aliases": [
+      "日本国"
+    ]
+  },
+  {
+    "code": "CL",
+    "name": "智利",
+    "echarts_name": "Chile",
+    "aliases": [
+      "智利共和国"
+    ]
+  },
+  {
+    "code": "KP",
+    "name": "朝鲜",
+    "echarts_name": "North Korea",
+    "aliases": [
+      "朝鲜人民民主共和国"
+    ]
+  },
+  {
+    "code": "KH",
+    "name": "柬埔寨",
+    "echarts_name": "Cambodia",
+    "aliases": [
+      "柬埔寨王国"
+    ]
+  },
+  {
+    "code": "GG",
+    "name": "根西岛",
+    "echarts_name": "Guernsey",
+    "aliases": []
+  },
+  {
+    "code": "GD",
+    "name": "格林纳达",
+    "echarts_name": "Grenada",
+    "aliases": []
+  },
+  {
+    "code": "GL",
+    "name": "格陵兰",
+    "echarts_name": "Greenland",
+    "aliases": []
+  },
+  {
+    "code": "GE",
+    "name": "格鲁吉亚",
+    "echarts_name": "Georgia",
+    "aliases": []
+  },
+  {
+    "code": "VA",
+    "name": "梵蒂冈",
+    "echarts_name": "Vatican City",
+    "aliases": [
+      "梵蒂冈城国"
+    ]
+  },
+  {
+    "code": "BE",
+    "name": "比利时",
+    "echarts_name": "Belgium",
+    "aliases": [
+      "比利时王国"
+    ]
+  },
+  {
+    "code": "MR",
+    "name": "毛里塔尼亚",
+    "echarts_name": "Mauritania",
+    "aliases": [
+      "毛里塔尼亚伊斯兰共和国"
+    ]
+  },
+  {
+    "code": "MU",
+    "name": "毛里求斯",
+    "echarts_name": "Mauritius",
+    "aliases": [
+      "毛里求斯共和国"
+    ]
+  },
+  {
+    "code": "CD",
+    "name": "民主刚果",
+    "echarts_name": "DR Congo",
+    "aliases": [
+      "刚果民主共和国"
+    ]
+  },
+  {
+    "code": "TO",
+    "name": "汤加",
+    "echarts_name": "Tonga",
+    "aliases": [
+      "汤加王国"
+    ]
+  },
+  {
+    "code": "SA",
+    "name": "沙特阿拉伯",
+    "echarts_name": "Saudi Arabia",
+    "aliases": [
+      "沙特阿拉伯王国"
+    ]
+  },
+  {
+    "code": "FR",
+    "name": "法国",
+    "echarts_name": "France",
+    "aliases": [
+      "法兰西共和国"
+    ]
+  },
+  {
+    "code": "TF",
+    "name": "法国南部和南极土地",
+    "echarts_name": "French Southern and Antarctic Lands",
+    "aliases": []
+  },
+  {
+    "code": "GF",
+    "name": "法属圭亚那",
+    "echarts_name": "French Guiana",
+    "aliases": []
+  },
+  {
+    "code": "PF",
+    "name": "法属波利尼西亚",
+    "echarts_name": "French Polynesia",
+    "aliases": []
+  },
+  {
+    "code": "FO",
+    "name": "法罗群岛",
+    "echarts_name": "Faroe Islands",
+    "aliases": []
+  },
+  {
+    "code": "PL",
+    "name": "波兰",
+    "echarts_name": "Poland",
+    "aliases": [
+      "波兰共和国"
+    ]
+  },
+  {
+    "code": "PR",
+    "name": "波多黎各",
+    "echarts_name": "Puerto Rico",
+    "aliases": [
+      "波多黎各联邦"
+    ]
+  },
+  {
+    "code": "BA",
+    "name": "波斯尼亚和黑塞哥维那",
+    "echarts_name": "Bosnia and Herz.",
+    "aliases": []
+  },
+  {
+    "code": "TH",
+    "name": "泰国",
+    "echarts_name": "Thailand",
+    "aliases": [
+      "泰王国"
+    ]
+  },
+  {
+    "code": "JE",
+    "name": "泽西岛",
+    "echarts_name": "Jersey",
+    "aliases": []
+  },
+  {
+    "code": "ZW",
+    "name": "津巴布韦",
+    "echarts_name": "Zimbabwe",
+    "aliases": [
+      "津巴布韦共和国"
+    ]
+  },
+  {
+    "code": "HN",
+    "name": "洪都拉斯",
+    "echarts_name": "Honduras",
+    "aliases": [
+      "洪都拉斯共和国"
+    ]
+  },
+  {
+    "code": "HT",
+    "name": "海地",
+    "echarts_name": "Haiti",
+    "aliases": [
+      "海地共和国"
+    ]
+  },
+  {
+    "code": "AU",
+    "name": "澳大利亚",
+    "echarts_name": "Australia",
+    "aliases": [
+      "澳大利亚联邦"
+    ]
+  },
+  {
+    "code": "MO",
+    "name": "澳门",
+    "echarts_name": "Macau",
+    "aliases": [
+      "中华人民共和国澳门特别行政区"
+    ]
+  },
+  {
+    "code": "IE",
+    "name": "爱尔兰",
+    "echarts_name": "Ireland",
+    "aliases": [
+      "爱尔兰共和国"
+    ]
+  },
+  {
+    "code": "EE",
+    "name": "爱沙尼亚",
+    "echarts_name": "Estonia",
+    "aliases": [
+      "爱沙尼亚共和国"
+    ]
+  },
+  {
+    "code": "JM",
+    "name": "牙买加",
+    "echarts_name": "Jamaica",
+    "aliases": []
+  },
+  {
+    "code": "TC",
+    "name": "特克斯和凯科斯群岛",
+    "echarts_name": "Turks and Caicos Islands",
+    "aliases": []
+  },
+  {
+    "code": "TT",
+    "name": "特立尼达和多巴哥",
+    "echarts_name": "Trinidad and Tobago",
+    "aliases": [
+      "特立尼达和多巴哥共和国"
+    ]
+  },
+  {
+    "code": "BO",
+    "name": "玻利维亚",
+    "echarts_name": "Bolivia",
+    "aliases": [
+      "多民族玻利维亚国"
+    ]
+  },
+  {
+    "code": "NR",
+    "name": "瑙鲁",
+    "echarts_name": "Nauru",
+    "aliases": [
+      "瑙鲁共和国"
+    ]
+  },
+  {
+    "code": "SE",
+    "name": "瑞典",
+    "echarts_name": "Sweden",
+    "aliases": [
+      "瑞典王国"
+    ]
+  },
+  {
+    "code": "CH",
+    "name": "瑞士",
+    "echarts_name": "Switzerland",
+    "aliases": [
+      "瑞士联邦"
+    ]
+  },
+  {
+    "code": "GP",
+    "name": "瓜德罗普岛",
+    "echarts_name": "Guadeloupe",
+    "aliases": []
+  },
+  {
+    "code": "WF",
+    "name": "瓦利斯和富图纳群岛",
+    "echarts_name": "Wallis and Futuna",
+    "aliases": []
+  },
+  {
+    "code": "VU",
+    "name": "瓦努阿图",
+    "echarts_name": "Vanuatu",
+    "aliases": [
+      "瓦努阿图共和国"
+    ]
+  },
+  {
+    "code": "RE",
+    "name": "留尼旺岛",
+    "echarts_name": "Réunion",
+    "aliases": []
+  },
+  {
+    "code": "BY",
+    "name": "白俄罗斯",
+    "echarts_name": "Belarus",
+    "aliases": [
+      "白俄罗斯共和国"
+    ]
+  },
+  {
+    "code": "BM",
+    "name": "百慕大",
+    "echarts_name": "Bermuda",
+    "aliases": []
+  },
+  {
+    "code": "PN",
+    "name": "皮特凯恩群岛",
+    "echarts_name": "Pitcairn Islands",
+    "aliases": []
+  },
+  {
+    "code": "GI",
+    "name": "直布罗陀",
+    "echarts_name": "Gibraltar",
+    "aliases": []
+  },
+  {
+    "code": "FK",
+    "name": "福克兰群岛",
+    "echarts_name": "Falkland Is.",
+    "aliases": []
+  },
+  {
+    "code": "KW",
+    "name": "科威特",
+    "echarts_name": "Kuwait",
+    "aliases": [
+      "科威特国"
+    ]
+  },
+  {
+    "code": "KM",
+    "name": "科摩罗",
+    "echarts_name": "Comoros",
+    "aliases": [
+      "科摩罗联盟"
+    ]
+  },
+  {
+    "code": "CI",
+    "name": "科特迪瓦",
+    "echarts_name": "Ivory Coast",
+    "aliases": [
+      "科特迪瓦共和国"
+    ]
+  },
+  {
+    "code": "CC",
+    "name": "科科斯",
+    "echarts_name": "Cocos (Keeling) Islands",
+    "aliases": []
+  },
+  {
+    "code": "XK",
+    "name": "科索沃",
+    "echarts_name": "Kosovo",
+    "aliases": [
+      "科索沃共和国"
+    ]
+  },
+  {
+    "code": "PE",
+    "name": "秘鲁",
+    "echarts_name": "Peru",
+    "aliases": [
+      "秘鲁共和国"
+    ]
+  },
+  {
+    "code": "TN",
+    "name": "突尼斯",
+    "echarts_name": "Tunisia",
+    "aliases": [
+      "突尼斯共和国"
+    ]
+  },
+  {
+    "code": "LT",
+    "name": "立陶宛",
+    "echarts_name": "Lithuania",
+    "aliases": [
+      "立陶宛共和国"
+    ]
+  },
+  {
+    "code": "SO",
+    "name": "索马里",
+    "echarts_name": "Somalia",
+    "aliases": [
+      "索马里共和国"
+    ]
+  },
+  {
+    "code": "JO",
+    "name": "约旦",
+    "echarts_name": "Jordan",
+    "aliases": [
+      "约旦哈希姆王国"
+    ]
+  },
+  {
+    "code": "NA",
+    "name": "纳米比亚",
+    "echarts_name": "Namibia",
+    "aliases": [
+      "纳米比亚共和国"
+    ]
+  },
+  {
+    "code": "NU",
+    "name": "纽埃",
+    "echarts_name": "Niue",
+    "aliases": []
+  },
+  {
+    "code": "MM",
+    "name": "缅甸",
+    "echarts_name": "Myanmar",
+    "aliases": [
+      "缅甸联邦共和国"
+    ]
+  },
+  {
+    "code": "RO",
+    "name": "罗马尼亚",
+    "echarts_name": "Romania",
+    "aliases": []
+  },
+  {
+    "code": "US",
+    "name": "美国",
+    "echarts_name": "United States of America",
+    "aliases": [
+      "美利坚合众国"
+    ]
+  },
+  {
+    "code": "UM",
+    "name": "美国本土外小岛屿",
+    "echarts_name": "United States Minor Outlying Islands",
+    "aliases": []
+  },
+  {
+    "code": "VI",
+    "name": "美属维尔京群岛",
+    "echarts_name": "United States Virgin Islands",
+    "aliases": []
+  },
+  {
+    "code": "AS",
+    "name": "美属萨摩亚",
+    "echarts_name": "American Samoa",
+    "aliases": []
+  },
+  {
+    "code": "LA",
+    "name": "老挝",
+    "echarts_name": "Laos",
+    "aliases": [
+      "老挝人民民主共和国"
+    ]
+  },
+  {
+    "code": "KE",
+    "name": "肯尼亚",
+    "echarts_name": "Kenya",
+    "aliases": [
+      "肯尼亚共和国"
+    ]
+  },
+  {
+    "code": "FI",
+    "name": "芬兰",
+    "echarts_name": "Finland",
+    "aliases": [
+      "芬兰共和国"
+    ]
+  },
+  {
+    "code": "SD",
+    "name": "苏丹",
+    "echarts_name": "Sudan",
+    "aliases": [
+      "苏丹共和国"
+    ]
+  },
+  {
+    "code": "SR",
+    "name": "苏里南",
+    "echarts_name": "Suriname",
+    "aliases": [
+      "苏里南共和国"
+    ]
+  },
+  {
+    "code": "GB",
+    "name": "英国",
+    "echarts_name": "United Kingdom",
+    "aliases": [
+      "大不列颠及北爱尔兰联合王国"
+    ]
+  },
+  {
+    "code": "IO",
+    "name": "英属印度洋领地",
+    "echarts_name": "British Indian Ocean Territory",
+    "aliases": []
+  },
+  {
+    "code": "VG",
+    "name": "英属维尔京群岛",
+    "echarts_name": "British Virgin Islands",
+    "aliases": []
+  },
+  {
+    "code": "NL",
+    "name": "荷兰",
+    "echarts_name": "Netherlands",
+    "aliases": []
+  },
+  {
+    "code": "BQ",
+    "name": "荷蘭加勒比區",
+    "echarts_name": "Caribbean Netherlands",
+    "aliases": []
+  },
+  {
+    "code": "MZ",
+    "name": "莫桑比克",
+    "echarts_name": "Mozambique",
+    "aliases": [
+      "莫桑比克共和国"
+    ]
+  },
+  {
+    "code": "LS",
+    "name": "莱索托",
+    "echarts_name": "Lesotho",
+    "aliases": [
+      "莱索托王国"
+    ]
+  },
+  {
+    "code": "PH",
+    "name": "菲律宾",
+    "echarts_name": "Philippines",
+    "aliases": [
+      "菲律宾共和国"
+    ]
+  },
+  {
+    "code": "SV",
+    "name": "萨尔瓦多",
+    "echarts_name": "El Salvador",
+    "aliases": [
+      "萨尔瓦多共和国"
+    ]
+  },
+  {
+    "code": "WS",
+    "name": "萨摩亚",
+    "echarts_name": "Samoa",
+    "aliases": [
+      "萨摩亚独立国"
+    ]
+  },
+  {
+    "code": "PT",
+    "name": "葡萄牙",
+    "echarts_name": "Portugal",
+    "aliases": [
+      "葡萄牙共和国"
+    ]
+  },
+  {
+    "code": "MN",
+    "name": "蒙古",
+    "echarts_name": "Mongolia",
+    "aliases": []
+  },
+  {
+    "code": "MS",
+    "name": "蒙特塞拉特",
+    "echarts_name": "Montserrat",
+    "aliases": []
+  },
+  {
+    "code": "EH",
+    "name": "西撒哈拉",
+    "echarts_name": "W. Sahara",
+    "aliases": [
+      "阿拉伯撒哈拉民主共和国"
+    ]
+  },
+  {
+    "code": "ES",
+    "name": "西班牙",
+    "echarts_name": "Spain",
+    "aliases": [
+      "西班牙王国"
+    ]
+  },
+  {
+    "code": "NF",
+    "name": "诺福克岛",
+    "echarts_name": "Norfolk Island",
+    "aliases": []
+  },
+  {
+    "code": "BJ",
+    "name": "贝宁",
+    "echarts_name": "Benin",
+    "aliases": [
+      "贝宁共和国"
+    ]
+  },
+  {
+    "code": "ZM",
+    "name": "赞比亚",
+    "echarts_name": "Zambia",
+    "aliases": [
+      "赞比亚共和国"
+    ]
+  },
+  {
+    "code": "GQ",
+    "name": "赤道几内亚",
+    "echarts_name": "Eq. Guinea",
+    "aliases": [
+      "赤道几内亚共和国"
+    ]
+  },
+  {
+    "code": "HM",
+    "name": "赫德岛和麦当劳群岛",
+    "echarts_name": "Heard Island and McDonald Islands",
+    "aliases": []
+  },
+  {
+    "code": "VN",
+    "name": "越南",
+    "echarts_name": "Vietnam",
+    "aliases": [
+      "越南社会主义共和国"
+    ]
+  },
+  {
+    "code": "AZ",
+    "name": "阿塞拜疆",
+    "echarts_name": "Azerbaijan",
+    "aliases": [
+      "阿塞拜疆共和国"
+    ]
+  },
+  {
+    "code": "AF",
+    "name": "阿富汗",
+    "echarts_name": "Afghanistan",
+    "aliases": [
+      "阿富汗伊斯兰共和国"
+    ]
+  },
+  {
+    "code": "DZ",
+    "name": "阿尔及利亚",
+    "echarts_name": "Algeria",
+    "aliases": [
+      "阿尔及利亚人民民主共和国"
+    ]
+  },
+  {
+    "code": "AL",
+    "name": "阿尔巴尼亚",
+    "echarts_name": "Albania",
+    "aliases": [
+      "阿尔巴尼亚共和国"
+    ]
+  },
+  {
+    "code": "AE",
+    "name": "阿拉伯联合酋长国",
+    "echarts_name": "United Arab Emirates",
+    "aliases": []
+  },
+  {
+    "code": "OM",
+    "name": "阿曼",
+    "echarts_name": "Oman",
+    "aliases": [
+      "阿曼苏丹国"
+    ]
+  },
+  {
+    "code": "AR",
+    "name": "阿根廷",
+    "echarts_name": "Argentina",
+    "aliases": [
+      "阿根廷共和国"
+    ]
+  },
+  {
+    "code": "AW",
+    "name": "阿鲁巴",
+    "echarts_name": "Aruba",
+    "aliases": []
+  },
+  {
+    "code": "KR",
+    "name": "韩国",
+    "echarts_name": "South Korea",
+    "aliases": [
+      "大韩民国"
+    ]
+  },
+  {
+    "code": "HK",
+    "name": "香港",
+    "echarts_name": "Hong Kong",
+    "aliases": [
+      "中华人民共和国香港特别行政区"
+    ]
+  },
+  {
+    "code": "MV",
+    "name": "马尔代夫",
+    "echarts_name": "Maldives",
+    "aliases": [
+      "马尔代夫共和国"
+    ]
+  },
+  {
+    "code": "IM",
+    "name": "马恩岛",
+    "echarts_name": "Isle of Man",
+    "aliases": []
+  },
+  {
+    "code": "MW",
+    "name": "马拉维",
+    "echarts_name": "Malawi",
+    "aliases": [
+      "马拉维共和国"
+    ]
+  },
+  {
+    "code": "MQ",
+    "name": "马提尼克",
+    "echarts_name": "Martinique",
+    "aliases": []
+  },
+  {
+    "code": "MY",
+    "name": "马来西亚",
+    "echarts_name": "Malaysia",
+    "aliases": []
+  },
+  {
+    "code": "YT",
+    "name": "马约特",
+    "echarts_name": "Mayotte",
+    "aliases": []
+  },
+  {
+    "code": "MH",
+    "name": "马绍尔群岛",
+    "echarts_name": "Marshall Islands",
+    "aliases": [
+      "马绍尔群岛共和国"
+    ]
+  },
+  {
+    "code": "MT",
+    "name": "马耳他",
+    "echarts_name": "Malta",
+    "aliases": [
+      "马耳他共和国"
+    ]
+  },
+  {
+    "code": "MG",
+    "name": "马达加斯加",
+    "echarts_name": "Madagascar",
+    "aliases": [
+      "马达加斯加共和国"
+    ]
+  },
+  {
+    "code": "ML",
+    "name": "马里",
+    "echarts_name": "Mali",
+    "aliases": [
+      "马里共和国"
+    ]
+  },
+  {
+    "code": "LB",
+    "name": "黎巴嫩",
+    "echarts_name": "Lebanon",
+    "aliases": [
+      "黎巴嫩共和国"
+    ]
+  },
+  {
+    "code": "ME",
+    "name": "黑山",
+    "echarts_name": "Montenegro",
+    "aliases": []
+  }
+]
