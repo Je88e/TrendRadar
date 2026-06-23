@@ -196,7 +196,7 @@
 # /\bOpenAI\b|\bChatGPT\b|\bSora\b|\bDALL-E\b|\bSam Altman\b|\bGreg Brockman\b/ => OpenAI
 # /\bAnthropic\b|\bClaude\b|\bDario Amodei\b/ => Claude
 
-/天味食品|天味|好人家|大红袍|天车/ => 天味食品
+/天味食品|好人家|大红袍|天车/ => 天味食品
 
 /遇见小面/ => 遇见小面
 

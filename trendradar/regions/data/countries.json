@@ -380,14 +380,6 @@
     ]
   },
   {
-    "code": "TW",
-    "name": "台灣",
-    "echarts_name": "Taiwan",
-    "aliases": [
-      "中華民國"
-    ]
-  },
-  {
     "code": "KG",
     "name": "吉尔吉斯斯坦",
     "echarts_name": "Kyrgyzstan",
