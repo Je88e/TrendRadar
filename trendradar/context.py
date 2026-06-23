@@ -32,7 +32,7 @@ from trendradar.report import (
     generate_html_report,
     render_html_content,
 )
-from trendradar.report.region import build_region_map_payload
+from trendradar.report.region import build_region_map_payload, collect_filtered_keys
 from trendradar.notification import (
     render_feishu_content,
     render_dingtalk_content,
@@ -218,17 +218,31 @@ class AppContext:
             self._region_normalizer = RegionNormalizer.from_data_dir(data_dir)
         return self._region_normalizer
 
-    def get_region_map_payload(self) -> Optional[Dict[str, Any]]:
+    def get_region_map_payload(
+        self,
+        stats: Optional[List[Dict]] = None,
+        rss_items: Optional[List[Dict]] = None,
+    ) -> Optional[Dict[str, Any]]:
         """构建地区地图 payload（design 6.1 树），供 HTML 渲染。
 
         开关关（region_map_enabled=False）→ None（不渲染该区）。
         否则从 storage 取 active 结果树 + 注入 echarts 世界名映射，构建 payload。
+
+        渲染阶段筛选：传入 stats/rss_items（与热榜/RSS 区同源，均已通过兴趣
+        筛选）时，payload 仅保留命中的 active 项，使地区地图与报告其他区一致。
+        两者都缺省 → 不过滤（向后兼容旧调用与测试）。
         """
         if not self.region_map_enabled:
             return None
         storage = self.get_storage_manager()
         active = storage.get_active_region_classify_results()
         echarts_names = self._get_region_normalizer().get_country_echarts_map()
+        # 任一显式传入即启用筛选（含空 list，表示该区本轮无命中）
+        if stats is not None or rss_items is not None:
+            allowed_keys = collect_filtered_keys(stats, rss_items)
+            return build_region_map_payload(
+                active, echarts_names=echarts_names, allowed_keys=allowed_keys
+            )
         return build_region_map_payload(active, echarts_names=echarts_names)
 
     # === 时间操作 ===

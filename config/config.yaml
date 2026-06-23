@@ -260,11 +260,11 @@ ai_filter:
 # 详见 docs/region-classify-design.md
 # ===============================================================
 region_classify:
-  enabled: false                            # 总开关，默认关（opt-in）
+  enabled: true                            # 总开关，默认关（opt-in）
                                             # 开启后：analyze 阶段对新闻做地区分类 +
                                             # HTML 报告渲染地区地图区
 
-  batch_size: 200                           # 每批发送给 AI 的标题数
+  batch_size: 50                            # 每批发送给 AI 的标题数
   batch_interval: 2                         # 分批间隔（秒）
 
   # 分类提示词模板（一般无需修改）
@@ -288,7 +288,7 @@ display:
     - rss                                 # 3️⃣ RSS 订阅区域
     - standalone                          # 4️⃣ 独立展示区
     - ai_analysis                         # 5️⃣ AI 分析区域
-    # - region_map                       # （可选）地区地图区，默认不显示
+    - region_map                       # （可选）地区地图区，默认不显示
 
   # 推送区域开关（需配合上方 region_order 使用）
   regions:
@@ -300,8 +300,7 @@ display:
     standalone: false                 # 独立展示区：完整热榜/RSS，不受关键词过滤（true=显示, false=隐藏）
     ai_analysis: true                 # AI 分析区域（true=显示, false=隐藏）
 
-    region_map: false                 # 地区地图区：需同时开启 region_classify.enabled
-                                      # （true=显示, false=隐藏；默认关）
+    region_map: true                  # 地区地图区：需同时开启 region_classify.enabled
 
   # 独立展示区：将指定平台/RSS 完整展示，不受关键词过滤
   # 推送展示由 regions.standalone 控制，AI 分析由 ai_analysis.include_standalone 控制
@@ -423,11 +422,11 @@ ai:
   # 完整列表: https://docs.litellm.ai/docs/providers
   # 如果你对于看英文文档比较头疼，那么可以点击页面右下角的 【Ask AI】 ,用中文询问怎么配置
 
-  model: "dashscope/qwen3.7-max-preview"
+  model: "openai/qwen3.7-max-2026-06-08"                      # dashscope/→openai/ 前缀，适配兼容模式 endpoint
 
-  api_key: "sk-5e1e7185a42046a4bbe1d74d33686edc"                       # API Key（建议使用环境变量 AI_API_KEY）
-  
-  api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"                      # 自定义 API 地址（可选，绝大多数情况留空即可）
+  api_key: "sk-ws-H.RPPLDEL.uPRu.MEUCIAvCJ7yZ8AqTdZ_XHvBPOpuCE_RWpYmWlHwDMtXD3oJVAiEArfgit7A6TikmES1vvy1bsnYTpCFquFXWxypfJq7w_dA"                       # API Key（建议使用环境变量 AI_API_KEY）
+
+  api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"        # DashScope OpenAI 兼容端点
                                     #
                                     # ❓ 什么时候需要填？
                                     #    当你使用的 AI 服务商不在上方支持列表中时。
@@ -448,12 +447,12 @@ ai:
                                     #    这样几乎任何服务商都能接入。
 
 
-  timeout: 120                      # 请求超时（秒）
+  timeout: 300                      # 请求超时（秒）
 
   temperature: 1.0                  # 采样温度 (0.0-2.0)
                                     # 注意：部分模型(如 gpt-5)可能要求必须为 1.0，否则会报错
-  
-  max_tokens: 5000                  # 最大生成 token 数
+
+  max_tokens: 16000                  # 最大生成 token 数
                                     # 注意：如果 API 不支持此参数(报 HTTP 400)，请设为 0 以禁用发送
   # 高级选项
   num_retries: 1                    # 失败重试次数
@@ -484,8 +483,8 @@ ai_analysis:
   max_news_for_analysis: 150        # 参与分析的新闻数量上限（控制 token 成本的关键项）
                                     # 热榜优先占用配额，RSS 用剩余配额，独立展示区不受此限制
 
-  include_rss: false                # 是否包含 RSS 内容进行分析（true=包含, false=不包含）
-  include_standalone: true          # 是否纳入独立展示区数据（true=纳入, false=不纳入）
+  include_rss: true                # 是否包含 RSS 内容进行分析（true=包含, false=不包含）
+  include_standalone: false          # 是否纳入独立展示区数据（true=纳入, false=不纳入）
 
   include_rank_timeline: true       # 排名时间线详细程度
                                     # true = 完整轨迹（如 1(09:30)→2(10:00)），AI 分析更准但多耗 0.5~1 倍 token

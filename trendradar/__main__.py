@@ -918,7 +918,11 @@ class NewsAnalyzer:
             html_standalone = standalone_data if display_regions.get("STANDALONE", False) else None
             html_ai = ai_result if display_regions.get("AI_ANALYSIS", True) else None
             # 地区地图 payload（region_map 开关关 → None，不渲染该区）
-            html_region_map = self.ctx.get_region_map_payload()
+            # 传入筛选后的 stats/rss_items → 地图仅展示通过兴趣筛选的资讯，
+            # 与热榜/RSS 区同源（standalone 不含在内，因其为显式不过滤区）
+            html_region_map = self.ctx.get_region_map_payload(
+                stats=stats, rss_items=rss_items
+            )
             html_file = self.ctx.generate_html(
                 stats,
                 total_titles,

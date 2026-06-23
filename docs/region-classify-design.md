@@ -20,11 +20,14 @@
 
 - **建表改无条件**：本设计原写「开关开才建表」，实际镜像现有 `ai_filter`（news 库 init 时无条件建，`CREATE TABLE IF NOT EXISTS` 幂等、空表零成本、与 ai_filter 行为一致）。已实施，无需回改。
 - **render_region_map_html 落位 `trendradar/report/region.py`（非 `html.py`）**：本设计原指定 `html.py` 独立函数，实际落位 `region.py` 与 payload builder 共处（按文件组织原则；`html.py` 3221 行已达上限）。`html.py` `render_html_content` 导入 `render_region_map_html` 并接线 region_contents，功能等价。
-15	- 全量测试现状：`uv run pytest tests/ -q` → **98 passed**（normalizer 14 + schema 5 + region parse 13 + classify_batch 4 + loader config 8 + context region 10 + storage region 7 + run_region_classify 6 + report region 28 + notification exclusion 3）。
+- **国级/省级新闻支持（修复新闻消失 bug）**：原 `_nest_china_item` 强制把所有中国新闻钻到 city 层，国级（level=country）/省级（level=province）新闻生成空名省/市节点被 choropleth `filter(adcode&&name)` 吞掉——count 在、新闻 drill 下去不可达。改为按 `level` 字段路由：国级→中国节点 `country_level_items`、省级→省节点 `province_level_items`、city→city 树（含 normalizer 失败的 orphan，name-keyed 留 city 树，单独 issue）。`provinces[]`/`cities[]` 只装可上色节点；两新字段始终在（空则 `[]`）。渲染层 `renderChina`/`renderProvince` panel 列桶行（`全国/未细分省`/`全省/未细分市`），与地图加载解耦——地图失败桶仍可达。纯渲染层修复，DB/schema/normalizer/AI/storage 零改动。
+15	- 全量测试现状：`uv run pytest tests/ -q` → **120 passed**（report region 48，含 +10 国级/省级用例）。
 
 ## 1. 目标
 
-新闻抓取后用 AI 给每条新闻打「地区」标签（国家/省/市），并在 HTML 报告中新增「按地区展示」交互式地图区，支持钻取查看新闻。与现有兴趣筛选正交，可配置开关，默认关闭，对原流程零侵入。
+新闻抓取后用 AI 给每条新闻打「地区」标签（国家/省/市），并在 HTML 报告中新增「按地区展示」交互式地图区，支持钻取查看新闻。可配置开关，默认关闭，对原流程零侵入。
+
+**与兴趣筛选的关系**：分类阶段全量落库（抓到的每条都打标，与兴趣筛选解耦，便于复跑/增量）；**渲染阶段按筛选对齐** —— `build_region_map_payload(allowed_keys=...)` 只放行当前报告通过兴趣筛选（keyword/ai）的热榜+RSS 资讯，地区地图与热榜/RSS 区同源。独立展示区（standalone，显式不过滤）不进入地区地图。`allowed_keys=None` 退化为不过滤（向后兼容）。
 
 ## 2. 关键决策（详见 ADR）
 
@@ -118,7 +121,9 @@ CREATE TABLE IF NOT EXISTS region_classify_analyzed_news (
 {
   "world": [
     {"code":"CN","name":"中国","count":12,
+     "country_level_items":[<news_item>...],
      "provinces":[{"adcode":"440000","name":"广东省","count":5,
+       "province_level_items":[<news_item>...],
        "cities":[{"adcode":"440100","name":"广州市","count":3,"items":[<news_item>...]}]}]},
     {"code":"US","name":"美国","count":3}
   ],
@@ -126,16 +131,20 @@ CREATE TABLE IF NOT EXISTS region_classify_analyzed_news (
 }
 ```
 
-- 中国：provinces→cities→items 全树（逐级钻取）
-- 海外：仅国家层（无 provinces）
+- 中国：`provinces`→`cities`→`items` 全树（逐级钻取）；`provinces[]`/`cities[]` 只装可上色节点（必有 adcode）
+- 中国国级新闻（level=country，无省归属）→ 中国节点 `country_level_items`（始终在，空则 `[]`）
+- 中国省级新闻（level=province，有省无市）→ 省节点 `province_level_items`（始终在，空则 `[]`）
+- count 语义：China.count 含国级；province.count 含省级 + 市；city.count 仅市
+- 海外：仅国家层（无 provinces），country/province 级新闻平铺进 `items`（省/市作文本标签）
 - `<news_item>` 复用现有字段（title/url/source_name/ranks/...），点地区展开复用 `news-item` 样式
 
 ### 6.2 渲染行为
 
-- ECharts（固定 `5.5.x`）+ `world` / `china` 注册 map。CDN 加 head（与 html2canvas 并列）。
+- ECharts（固定 `5.6.0`）+ `world` / `china` 注册 map。CDN 多源回退异步加载。
 - 世界图 choropleth，色深 = 新闻数。默认世界视图，面包屑 `世界 > 中国 > 广东省` 返回。
-- 中国国家 click → 运行时 fetch DataV `{adcode}_full.json` 渲省份块 → 省块 click → 市块。
+- 中国国家 click → 运行时 fetch DataV `100000_full.json` 渲省份块 → 省块 click → 市块。
 - 海外国家 click → 无下钻，仅展开该国新闻列表（含省/市文字标签）。
+- **国级/省级桶**（无 adcode → 无地图色块 → 地图点不到）：中国视图 panel 列 `全国/未细分省` 行（`country_level_items` 非空时），省视图 panel 列 `全省/未细分市` 行（`province_level_items` 非空时）；点击行展开新闻列表。桶与地图加载解耦——地图失败桶仍可达。
 - unknown 桶：地图下折叠列表。
 - 窄屏/宽屏均渲染（响应式高）。
 

@@ -111,3 +111,46 @@ class TestGetRegionMapPayload:
             m_storage.return_value.get_active_region_classify_results.return_value = {"hotlist": [], "rss": []}
             payload = c.get_region_map_payload()
         assert payload == {"world": [], "unknown": {"count": 0, "items": []}}
+
+    def test_filters_active_by_stats_when_provided(self):
+        """传入 stats/rss_items → payload 仅含命中的 (source_name, title)。"""
+        c = self._enabled_ctx()
+        active = {"hotlist": [
+            {"news_item_id": 1, "source_type": "hotlist", "level": "city",
+             "confidence": 0.9, "country": "中国", "country_code": "CN",
+             "province": "广东省", "province_adcode": "440000",
+             "city": "广州市", "city_adcode": "440100",
+             "title": "命中", "source_name": "微博", "url": "",
+             "ranks": [1], "rank": None},
+            {"news_item_id": 2, "source_type": "hotlist", "level": "city",
+             "confidence": 0.9, "country": "中国", "country_code": "CN",
+             "province": "北京市", "province_adcode": "110000",
+             "city": "北京市", "city_adcode": "110100",
+             "title": "未命中", "source_name": "知乎", "url": "",
+             "ranks": [1], "rank": None},
+        ], "rss": []}
+        stats = [{"word": "关键词", "count": 1, "titles": [
+            {"title": "命中", "source_name": "微博"},
+        ]}]
+        with patch.object(c, "get_storage_manager") as m_storage:
+            m_storage.return_value.get_active_region_classify_results.return_value = active
+            payload = c.get_region_map_payload(stats=stats, rss_items=[])
+        # 仅"命中"保留 → 广东省，北京市被滤掉
+        cn = payload["world"][0]
+        assert cn["count"] == 1
+        provs = [p["adcode"] for p in cn["provinces"]]
+        assert provs == ["440000"]
+
+    def test_no_filter_when_stats_omitted(self):
+        """stats/rss_items 都缺省 → 不过滤（向后兼容旧调用）。"""
+        c = self._enabled_ctx()
+        active = {"hotlist": [
+            {"news_item_id": 1, "source_type": "hotlist", "level": "country",
+             "confidence": 0.9, "country": "美国", "country_code": "US",
+             "title": "A", "source_name": "微博", "url": "",
+             "ranks": [], "rank": None},
+        ], "rss": []}
+        with patch.object(c, "get_storage_manager") as m_storage:
+            m_storage.return_value.get_active_region_classify_results.return_value = active
+            payload = c.get_region_map_payload()
+        assert payload["world"][0]["count"] == 1  # 未滤掉
