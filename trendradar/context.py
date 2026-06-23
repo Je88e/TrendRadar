@@ -459,6 +459,7 @@ class AppContext:
             show_new_section=self.show_new_section,
             standalone_data=standalone_data,
             region_map=region_map,
+            timezone=self.timezone,
         )
 
     # === 通知内容渲染 ===

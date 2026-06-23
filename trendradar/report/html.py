@@ -10,7 +10,11 @@ from typing import Any, Dict, List, Optional, Callable
 
 from trendradar.report.helpers import html_escape, calculate_rank_trend
 from trendradar.report.region import render_region_map_html
-from trendradar.utils.time import convert_time_for_display
+from trendradar.utils.time import (
+    DEFAULT_TIMEZONE,
+    convert_time_for_display,
+    format_iso_time_friendly,
+)
 from trendradar.ai.formatter import render_ai_analysis_html_rich
 
 
@@ -29,6 +33,7 @@ def render_html_content(
     ai_analysis: Optional[Any] = None,
     show_new_section: bool = True,
     region_map: Optional[Dict[str, Any]] = None,
+    timezone: str = DEFAULT_TIMEZONE,
 ) -> str:
     """渲染HTML内容
 
@@ -2161,18 +2166,11 @@ def render_html_content(
                             <div class="news-content">
                                 <div class="news-header">"""
 
-                # 时间显示（格式化 ISO 时间）
-                if published_at:
-                    try:
-                        from datetime import datetime as dt
-                        if "T" in published_at:
-                            dt_obj = dt.fromisoformat(published_at.replace("Z", "+00:00"))
-                            time_display = dt_obj.strftime("%m-%d %H:%M")
-                        else:
-                            time_display = published_at
-                    except:
-                        time_display = published_at
-
+                # 时间显示（RSS published_at 以 naive-UTC 存储，需按配置时区转换）
+                time_display = format_iso_time_friendly(
+                    published_at, timezone, include_date=True
+                )
+                if time_display:
                     standalone_html += f'<span class="time-info">{html_escape(time_display)}</span>'
 
                 # 作者显示
