@@ -1501,9 +1501,7 @@ def render_html_content(
                     </div>
                 </div>
                 <div class="header-eyebrow">INTELLIGENCE BRIEFING</div>
-                <div class="header-eyebrow">INTELLIGENCE BRIEFING</div>
                 <div class="header-title">热点新闻分析</div>
-                <div class="header-sub">TrendRadar · 信号 · 趋势 · 异动</div>
                 <div class="header-sub">TrendRadar · 信号 · 趋势 · 异动</div>
                 <div class="header-info">"""
 
