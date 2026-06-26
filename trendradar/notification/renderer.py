@@ -50,12 +50,13 @@ def render_feishu_content(
 
     # 生成热点词汇统计部分
     stats_content = ""
-    if report_data["stats"]:
+    visible_stats = [s for s in report_data["stats"] if s["count"] > 0]
+    if visible_stats:
         stats_content += "📊 **热点词汇统计**\n\n"
 
-        total_count = len(report_data["stats"])
+        total_count = len(visible_stats)
 
-        for i, stat in enumerate(report_data["stats"]):
+        for i, stat in enumerate(visible_stats):
             word = stat["word"]
             count = stat["count"]
 
@@ -77,7 +78,7 @@ def render_feishu_content(
                 if j < len(stat["titles"]):
                     stats_content += "\n"
 
-            if i < len(report_data["stats"]) - 1:
+            if i < len(visible_stats) - 1:
                 stats_content += f"\n{separator}\n\n"
 
     # 生成新增新闻部分
@@ -190,12 +191,13 @@ def render_dingtalk_content(
 
     # 生成热点词汇统计部分
     stats_content = ""
-    if report_data["stats"]:
+    visible_stats = [s for s in report_data["stats"] if s["count"] > 0]
+    if visible_stats:
         stats_content += "📊 **热点词汇统计**\n\n"
 
-        total_count = len(report_data["stats"])
+        total_count = len(visible_stats)
 
-        for i, stat in enumerate(report_data["stats"]):
+        for i, stat in enumerate(visible_stats):
             word = stat["word"]
             count = stat["count"]
 
@@ -217,7 +219,7 @@ def render_dingtalk_content(
                 if j < len(stat["titles"]):
                     stats_content += "\n"
 
-            if i < len(report_data["stats"]) - 1:
+            if i < len(visible_stats) - 1:
                 stats_content += "\n---\n\n"
 
     # 生成新增新闻部分

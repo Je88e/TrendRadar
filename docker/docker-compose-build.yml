@@ -7,15 +7,28 @@ services:
     restart: unless-stopped
 
     ports:
-      - "127.0.0.1:${WEBSERVER_PORT:-8080}:${WEBSERVER_PORT:-8080}"
+      # bind 0.0.0.0 (非 127.0.0.1) 使 Docker 网络可达
+      # serve 模式: ADMIN_PORT (fallback WEBSERVER_PORT → 8080)
+      # cron/once 模式: WEBSERVER_PORT (→ 8080)
+      - "${WEBSERVER_PORT:-8080}:${WEBSERVER_PORT:-8080}"
 
     volumes:
-      - ../config:/app/config:ro
+      # rw — serve 模式下管理后台 PUT 需写配置 + .backups/
+      - ../config:/app/config
       - ../output:/app/output
-
+    env_file:
+      - .env
     environment:
       - TZ=Asia/Shanghai
-      # Web 服务器
+      # 运行模式: cron (默认) | once | serve
+      #   serve = 长驻调度 + 管理后台 (在线编辑保存即生效)
+      - RUN_MODE=${RUN_MODE:-cron}
+      - CRON_SCHEDULE=${CRON_SCHEDULE:-*/30 * * * *}
+      - IMMEDIATE_RUN=${IMMEDIATE_RUN:-true}
+      # 管理后台 (仅 RUN_MODE=serve 生效)
+      #   ADMIN_HOST=0.0.0.0 使 Docker 网络可达
+      #   🔒 远端暴露须自加反代鉴权 (设计 Q5=C, ADR-0004)
+      - ADMIN_HOST=${ADMIN_HOST:-0.0.0.0}
       - WEBSERVER_PORT=${WEBSERVER_PORT:-8080}
       # 通知渠道
       - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL:-}
@@ -52,10 +65,6 @@ services:
       - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
       - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
       - S3_REGION=${S3_REGION:-}
-      # 运行模式
-      - CRON_SCHEDULE=${CRON_SCHEDULE:-*/30 * * * *}
-      - RUN_MODE=${RUN_MODE:-cron}
-      - IMMEDIATE_RUN=${IMMEDIATE_RUN:-true}
 
   trendradar-mcp:
     build:

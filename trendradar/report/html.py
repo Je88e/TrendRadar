@@ -477,6 +477,13 @@ def render_html_content(
             .word-group { margin-bottom: 36px; }
             .word-group:first-child { margin-top: 0; }
 
+            /* 固定空词组占位行（静默，无装饰；--muted-2 在 dark-mode 下自动覆盖） */
+            .news-empty-placeholder {
+                padding: 10px 4px;
+                color: var(--muted-2);
+                font-size: 14px;
+            }
+
             .word-header {
                 display: flex;
                 align-items: baseline;
@@ -1690,6 +1697,11 @@ def render_html_content(
                         <div class="word-index"><span class="collapse-icon">▼</span>{i}/{total_count}</div>
                     </div>"""
 
+            # 固定空词组占位（count==0：本轮 0 匹配，渲染静默行后跳过新闻列表）
+            if count == 0:
+                stats_html += """
+                    <div class="news-empty-placeholder">📌 暂无相关新闻</div>"""
+
             # 处理每个词组下的新闻标题，给每条新闻标上序号
             for j, title_data in enumerate(stat["titles"], 1):
                 is_new = title_data.get("is_new", False)
@@ -1882,9 +1894,11 @@ def render_html_content(
         if not stats:
             return ""
 
-        # 计算总条目数
+        # 计算总条目数（固定空词组 count=0 不计入总数）
         total_count = sum(stat.get("count", 0) for stat in stats)
-        if total_count == 0:
+        # 仅固定空时也保留 RSS 段（§Q-empty：放宽 total_count==0 门）
+        has_pinned = any(stat.get("pinned") for stat in stats)
+        if total_count == 0 and not has_pinned:
             return ""
 
         rss_html = f"""
@@ -1899,7 +1913,8 @@ def render_html_content(
         for stat in stats:
             keyword = stat.get("word", "")
             titles = stat.get("titles", [])
-            if not titles:
+            # 固定空词组（pinned）放行：渲染占位行（§4 RSS :1902）
+            if not titles and not stat.get("pinned"):
                 continue
 
             keyword_count = len(titles)
@@ -1910,6 +1925,11 @@ def render_html_content(
                             <div class="feed-name">{html_escape(keyword)}</div>
                             <div class="feed-count">{keyword_count} 条</div>
                         </div>"""
+
+            # 固定空词组占位（count==0：本轮 0 匹配，渲染静默行后跳过新闻列表）
+            if not titles:
+                rss_html += """
+                        <div class="news-empty-placeholder">📌 暂无相关新闻</div>"""
 
             for title_data in titles:
                 item_title = title_data.get("title", "")

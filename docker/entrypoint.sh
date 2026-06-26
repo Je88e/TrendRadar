@@ -22,7 +22,7 @@ case "${RUN_MODE:-cron}" in
 
     # 生成 crontab
     echo "$CRON_EXPR cd /app && python -m trendradar" > /tmp/crontab
-    
+
     echo "📅 生成的crontab内容:"
     cat /tmp/crontab
 
@@ -45,6 +45,15 @@ case "${RUN_MODE:-cron}" in
     echo "🎯 supercronic 将作为 PID 1 运行"
 
     exec /usr/local/bin/supercronic -passthrough-logs /tmp/crontab
+    ;;
+"serve")
+    echo "🌐 长驻调度 + 管理后台"
+    echo "  管理后台: http://localhost:${WEBSERVER_PORT:-8080}/admin/"
+    echo "  报告首页: http://localhost:${WEBSERVER_PORT:-8080}/"
+    echo "  ADMIN_HOST=${ADMIN_HOST:-0.0.0.0}"
+    echo "  WEBSERVER_PORT=${WEBSERVER_PORT:-8080}"
+    echo "🔒 安全提示: 远端暴露请自加反代鉴权 (设计 Q5=C)"
+    exec python -m trendradar --serve
     ;;
 *)
     exec "$@"

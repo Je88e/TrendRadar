@@ -118,6 +118,13 @@ const STORAGE_KEY_CONFIG_TIME = 'trendradar_config_time';
 const STORAGE_KEY_FREQUENCY_TIME = 'trendradar_frequency_time';
 const STORAGE_KEY_TIMELINE_TIME = 'trendradar_timeline_time';
 
+// 管理后台本地 API（--serve 模式下可用，同源）
+const LOCAL_CONFIG_URL = '/api/config/config.yaml';
+const LOCAL_FREQUENCY_URL = '/api/config/frequency_words.txt';
+const LOCAL_TIMELINE_URL = '/api/config/timeline.yaml';
+// ETag 缓存（GET 应答头取，PUT 时填 If-Match 防冲突）
+const configEtags = {};
+
 // 官网配置文件 URL（GitHub 主源）
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/';
 const REMOTE_CONFIG_URL = GITHUB_RAW_BASE + 'config/config.yaml';
@@ -675,6 +682,59 @@ window.confirmLoadConfig = async function() {
         showToast(`加载失败: ${err.message}`, 'error');
     }
 }
+
+// 从本地管理后台加载配置（--serve 模式，同源 /api/config/<file>）。
+// 加载全部三份配置文件；若只需部分，用「加载原配置」弹窗勾选后从 GitHub 拉取。
+window.loadFromServer = async function() {
+    showToast('正在从服务端加载配置...', 'info');
+
+    const tasks = [
+        { type: 'config', name: 'config.yaml', url: LOCAL_CONFIG_URL },
+        { type: 'frequency', name: 'frequency_words.txt', url: LOCAL_FREQUENCY_URL },
+        { type: 'timeline', name: 'timeline.yaml', url: LOCAL_TIMELINE_URL },
+    ];
+
+    const loadedFiles = [];
+    for (const { type, name, url } of tasks) {
+        try {
+            const resp = await fetch(url);
+            if (resp.status === 404) {
+                showToast(`${name} 在服务端不存在`, 'warning');
+                continue;
+            }
+            if (!resp.ok) throw new Error(`${name} 加载失败: ${resp.status}`);
+            const etag = resp.headers.get('etag');
+            if (etag) configEtags[name] = etag;
+            const text = await resp.text();
+            if (type === 'config') {
+                document.getElementById('yaml-editor').value = text;
+                currentYaml = text;
+                updateBackdrop('yaml-editor', 'yaml-backdrop');
+                syncYamlToUI();
+            } else if (type === 'timeline') {
+                document.getElementById('timeline-editor').value = text;
+                currentTimeline = text;
+                updateBackdrop('timeline-editor', 'timeline-backdrop');
+                syncTimelineToUI();
+            } else {
+                document.getElementById('frequency-editor').value = text;
+                currentFrequency = text;
+                currentFrequencyData = null;
+                updateBackdrop('frequency-editor', 'frequency-backdrop');
+                syncFrequencyToUI();
+            }
+            loadedFiles.push(name);
+        } catch (err) {
+            console.error(`加载 ${name} 失败:`, err);
+            showToast(`${name}: ${err.message}`, 'error');
+        }
+    }
+
+    if (loadedFiles.length) {
+        saveToLocalStorage();
+        showToast(`已加载服务端: ${loadedFiles.join(', ')}`, 'success');
+    }
+};
 
 // ==========================================
 // 2.4 Toast 提示
@@ -1280,6 +1340,47 @@ window.copyResult = function() {
         setTimeout(() => btn.innerHTML = original, 2000);
     }
 }
+
+// 保存到管理后台（--serve 模式，PUT /api/config/<file> + If-Match）
+window.saveToServer = async function() {
+    const filename = currentTab === 'config' ? 'config.yaml' : currentTab === 'timeline' ? 'timeline.yaml' : 'frequency_words.txt';
+    const editor = currentTab === 'config' ? document.getElementById('yaml-editor') : currentTab === 'timeline' ? document.getElementById('timeline-editor') : document.getElementById('frequency-editor');
+    const text = editor.value;
+    const btn = document.querySelector('button[onclick="saveToServer()"]');
+    if (!btn) return;
+    const original = btn.innerHTML;
+
+    try {
+        const headers = { 'Content-Type': 'text/plain; charset=utf-8' };
+        if (configEtags[filename]) headers['If-Match'] = configEtags[filename];
+        const resp = await fetch('/api/config/' + filename, { method: 'PUT', headers: headers, body: text });
+        if (resp.status === 409) {
+            showToast('配置已被他人修改，请「加载服务配置」后重新编辑保存', 'error');
+            btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1.5"></i>冲突!';
+            setTimeout(() => btn.innerHTML = original, 3000);
+            return;
+        }
+        if (resp.status === 422) {
+            const errBody = await resp.text();
+            showToast('校验失败: ' + errBody.replace(/^配置校验失败:\n?/, ''), 'error');
+            btn.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1.5"></i>校验失败';
+            setTimeout(() => btn.innerHTML = original, 3000);
+            return;
+        }
+        if (!resp.ok) {
+            const msg = resp.status === 404 ? '服务端配置文件不存在（请确认 --serve 模式已启动）' : 'HTTP ' + resp.status;
+            throw new Error(msg);
+        }
+        // 成功后刷新 ETag（后台写入使文件变化，下次 GET 取新 ETag）
+        delete configEtags[filename];
+        btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i>已保存!';
+        saveToLocalStorage();
+    } catch (err) {
+        console.error('保存失败:', err);
+        showToast('保存失败: ' + err.message, 'error');
+    }
+    setTimeout(() => btn.innerHTML = original, 2000);
+};
 
 window.resetToDefault = function() {
     if (confirm('确定要重置为初始状态吗？未保存的修改将丢失。')) {

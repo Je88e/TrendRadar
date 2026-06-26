@@ -31,6 +31,7 @@ from trendradar.report import (
     prepare_report_data,
     generate_html_report,
     render_html_content,
+    enrich_rss_stats_with_pinned,
 )
 from trendradar.report.region import build_region_map_payload, collect_filtered_keys
 from trendradar.notification import (
@@ -394,6 +395,7 @@ class AppContext:
             mode=mode,
             rank_threshold=self.rank_threshold,
             show_new_section=self.show_new_section,
+            pinned_keywords=self.config.get("PINNED_KEYWORDS", set()),
         )
 
     def generate_html(
@@ -430,6 +432,7 @@ class AppContext:
             render_html_func=lambda *args, **kwargs: self.render_html(*args, rss_items=rss_items, rss_new_items=rss_new_items, ai_analysis=ai_analysis, standalone_data=standalone_data, region_map=region_map, **kwargs),
             report_metadata=report_metadata,
             translate_report_func=translate_report_func,
+            pinned_keywords=self.config.get("PINNED_KEYWORDS", set()),
         )
 
     def render_html(
@@ -445,6 +448,10 @@ class AppContext:
         region_map: Optional[Dict[str, Any]] = None,
     ) -> str:
         """渲染HTML内容"""
+        # 固定词组：为 RSS 关键词统计补充固定空词组占位（不改 analyzer，§4）
+        pinned_keywords = self.config.get("PINNED_KEYWORDS", set())
+        rss_items = enrich_rss_stats_with_pinned(rss_items, pinned_keywords)
+        rss_new_items = enrich_rss_stats_with_pinned(rss_new_items, pinned_keywords)
         return render_html_content(
             report_data=report_data,
             total_titles=total_titles,

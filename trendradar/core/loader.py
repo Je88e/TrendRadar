@@ -7,7 +7,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional, Tuple, Union
 
 import yaml
 
@@ -80,10 +80,14 @@ def _load_crawler_config(config_data: Dict) -> Dict:
 def _load_report_config(config_data: Dict) -> Dict:
     """加载报告配置"""
     report_config = config_data.get("report", {})
+    report_display = report_config.get("display", {})
 
     # 环境变量覆盖
     sort_by_position_env = _get_env_bool("SORT_BY_POSITION_FIRST")
     max_news_env = _get_env_int("MAX_NEWS_PER_KEYWORD")
+
+    # 固定词组：按 display_name 匹配；值保持原样（中文/大小写不变），见 ADR-0003
+    pinned_keywords = set(report_display.get("pinned_keywords", []) or [])
 
     return {
         "REPORT_MODE": report_config.get("mode", "daily"),
@@ -91,6 +95,7 @@ def _load_report_config(config_data: Dict) -> Dict:
         "RANK_THRESHOLD": report_config.get("rank_threshold", 10),
         "SORT_BY_POSITION_FIRST": sort_by_position_env if sort_by_position_env is not None else report_config.get("sort_by_position_first", False),
         "MAX_NEWS_PER_KEYWORD": max_news_env or report_config.get("max_news_per_keyword", 0),
+        "PINNED_KEYWORDS": pinned_keywords,
     }
 
 
@@ -134,19 +139,21 @@ def _load_schedule_config(config_data: Dict) -> Dict:
     }
 
 
-def _load_timeline_data(config_dir: str = "config") -> Dict:
+def _load_timeline_data(config_dir: str = "config", quiet: bool = False) -> Dict:
     """
     加载 timeline.yaml
 
     Args:
         config_dir: 配置目录路径
+        quiet: 静默模式（不输出 print），供管理后台校验干跑使用
 
     Returns:
         timeline.yaml 的完整数据，找不到时返回空模板
     """
     timeline_path = Path(config_dir) / "timeline.yaml"
     if not timeline_path.exists():
-        print(f"[调度] timeline.yaml 未找到: {timeline_path}，使用空模板")
+        if not quiet:
+            print(f"[调度] timeline.yaml 未找到: {timeline_path}，使用空模板")
         return {
             "presets": {},
             "custom": {
@@ -167,7 +174,8 @@ def _load_timeline_data(config_dir: str = "config") -> Dict:
     with open(timeline_path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    print(f"[调度] timeline.yaml 加载成功: {timeline_path}")
+    if not quiet:
+        print(f"[调度] timeline.yaml 加载成功: {timeline_path}")
     return data or {}
 
 
@@ -182,8 +190,18 @@ def _load_weight_config(config_data: Dict) -> Dict:
     }
 
 
-def _load_rss_config(config_data: Dict) -> Dict:
-    """加载 RSS 配置"""
+def _load_rss_config(
+    config_data: Dict,
+    warnings: Optional[List[str]] = None,
+    quiet: bool = False,
+) -> Dict:
+    """加载 RSS 配置
+
+    Args:
+        config_data: 原始 YAML 数据
+        warnings: 可选的告警收集列表；静默强转（如负 max_age_days 纠正）会追加说明
+        quiet: 静默模式（不输出 print）
+    """
     rss = config_data.get("rss", {})
     advanced = config_data.get("advanced", {})
     advanced_rss = advanced.get("rss", {})
@@ -195,15 +213,23 @@ def _load_rss_config(config_data: Dict) -> Dict:
     # 新鲜度过滤配置
     freshness_filter = rss.get("freshness_filter", {})
 
-    # 验证并设置 max_age_days 默认值
+    # 验证并设置 max_age_days 默认值（静默强转 → 收为非阻塞 warning）
     raw_max_age = freshness_filter.get("max_age_days", 3)
     try:
         max_age_days = int(raw_max_age)
         if max_age_days < 0:
-            print(f"[警告] RSS freshness_filter.max_age_days 为负数 ({max_age_days})，使用默认值 3")
+            msg = f"RSS freshness_filter.max_age_days 为负数 ({max_age_days})，已纠正为默认值 3"
+            if not quiet:
+                print(f"[警告] {msg}")
+            if warnings is not None:
+                warnings.append(msg)
             max_age_days = 3
     except (ValueError, TypeError):
-        print(f"[警告] RSS freshness_filter.max_age_days 格式错误 ({raw_max_age})，使用默认值 3")
+        msg = f"RSS freshness_filter.max_age_days 格式错误 ({raw_max_age})，已纠正为默认值 3"
+        if not quiet:
+            print(f"[警告] {msg}")
+        if warnings is not None:
+            warnings.append(msg)
         max_age_days = 3
 
     # RSS 配置直接从 config.yaml 读取，不再支持环境变量
@@ -395,9 +421,13 @@ def _load_storage_config(config_data: Dict) -> Dict:
     txt_enabled_env = _get_env_bool("STORAGE_TXT_ENABLED")
     html_enabled_env = _get_env_bool("STORAGE_HTML_ENABLED")
     pull_enabled_env = _get_env_bool("PULL_ENABLED")
+    # STORAGE_RETENTION_DAYS env 覆盖（顶层 RETENTION_DAYS，供 __main__ 展示）。
+    # env 覆盖在归一化层 → reload 安全（ADR-0004 §52，原 __main__ 就地 mutate 丢失）。
+    retention_env = _get_env_int("STORAGE_RETENTION_DAYS")
 
     return {
         "BACKEND": _get_env_str("STORAGE_BACKEND") or storage.get("backend", "auto"),
+        "RETENTION_DAYS": retention_env,
         "FORMATS": {
             "SQLITE": formats.get("sqlite", True),
             "TXT": txt_enabled_env if txt_enabled_env is not None else formats.get("txt", True),
@@ -469,8 +499,10 @@ def _load_webhook_config(config_data: Dict) -> Dict:
     }
 
 
-def _print_notification_sources(config: Dict) -> None:
+def _print_notification_sources(config: Dict, quiet: bool = False) -> None:
     """打印通知渠道配置来源信息"""
+    if quiet:
+        return
     notification_sources = []
     max_accounts = config["MAX_ACCOUNTS_PER_CHANNEL"]
 
@@ -551,15 +583,22 @@ def _print_notification_sources(config: Dict) -> None:
         print("未配置任何通知渠道")
 
 
-def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+def load_config(
+    config_path: Optional[str] = None,
+    quiet: bool = False,
+    return_warnings: bool = False,
+) -> Union[Dict[str, Any], Tuple[Dict[str, Any], List[str]]]:
     """
     加载配置文件
 
     Args:
         config_path: 配置文件路径，默认从环境变量 CONFIG_PATH 获取或使用 config/config.yaml
+        quiet: 静默模式（不输出 print），供管理后台校验干跑使用（默认 False 保持现行为）
+        return_warnings: 返回 (config, warnings) 而非仅 config，暴露静默强转告警
+            （如负 max_age_days 纠正），供管理后台校验层非阻塞提示
 
     Returns:
-        包含所有配置的字典
+        配置字典；return_warnings=True 时返回 (config, warnings)
 
     Raises:
         FileNotFoundError: 配置文件不存在
@@ -573,7 +612,11 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     with open(config_path, "r", encoding="utf-8") as f:
         config_data = yaml.safe_load(f)
 
-    print(f"配置文件加载成功: {config_path}")
+    if not quiet:
+        print(f"配置文件加载成功: {config_path}")
+
+    # 静默强转告警收集（仅 return_warnings 时返回，收集始终廉价）
+    warnings: List[str] = []
 
     # 合并所有配置
     config = {}
@@ -593,7 +636,8 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     # 统一调度配置
     config["SCHEDULE"] = _load_schedule_config(config_data)
     config["_TIMELINE_DATA"] = _load_timeline_data(
-        str(Path(config_path).parent) if config_path else "config"
+        str(Path(config_path).parent) if config_path else "config",
+        quiet=quiet,
     )
 
     # 权重配置
@@ -604,7 +648,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     config["PLATFORMS"] = [p for p in platforms_config.get("sources", []) if p.get("enabled", True)]
 
     # RSS 配置
-    config["RSS"] = _load_rss_config(config_data)
+    config["RSS"] = _load_rss_config(config_data, warnings=warnings, quiet=quiet)
 
     # AI 模型共享配置
     config["AI"] = _load_ai_config(config_data)
@@ -634,6 +678,8 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     config.update(_load_webhook_config(config_data))
 
     # 打印通知渠道配置来源
-    _print_notification_sources(config)
+    _print_notification_sources(config, quiet=quiet)
 
+    if return_warnings:
+        return config, warnings
     return config

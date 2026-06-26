@@ -25,18 +25,18 @@
                 <span class="font-bold text-lg tracking-tight text-gray-900">TrendRadar <span class="text-gray-500 text-xs font-normal ml-2">可视化配置编辑器 </span></span>
             </a>
 
-            <!-- 隐私安全提示 -->
-            <div class="hidden lg:flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 select-none">
-                <i class="fa-solid fa-shield-halved mr-1.5 text-green-500"></i>
-                <span>纯静态页面，数据仅保存在你的本地浏览器，请放心使用</span>
-            </div>
-
             <div class="flex gap-3">
                 <button onclick="openLoadConfigModal()" class="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
-                    <i class="fa-solid fa-cloud-arrow-down"></i>加载官网最新配置
+                    <i class="fa-solid fa-cloud-arrow-down"></i>加载原配置
                 </button>
-                <button onclick="copyResult()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-sm">
-                    <i class="fa-regular fa-copy mr-1.5"></i>复制配置
+                <button onclick="loadFromServer()" class="text-xs text-emerald-600 hover:text-emerald-800 underline flex items-center gap-1" id="load-server-btn">
+                    <i class="fa-solid fa-server"></i>加载服务配置
+                </button>
+                <button onclick="saveToServer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-sm" id="save-server-btn">
+                    <i class="fa-solid fa-floppy-disk mr-1.5"></i>保存到服务
+                </button>
+                <button onclick="copyResult()" class="text-xs text-gray-500 hover:text-gray-700 underline flex items-center gap-1" id="copy-btn">
+                    <i class="fa-regular fa-copy mr-1"></i>复制
                 </button>
             </div>
         </div>
@@ -130,110 +130,7 @@
             </div>
         </div>
 
-        <!-- 支持侧栏 (固定，不随内容滚动) -->
-        <div class="support-sidebar-wrap flex-shrink-0 relative">
-            <!-- 折叠/展开按钮 (侧栏左边缘) -->
-            <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" onclick="toggleSupportSidebar()" title="收起侧栏">
-                <i class="fa-solid fa-chevron-right text-[10px]"></i>
-            </button>
-            <div id="support-sidebar" class="support-sidebar border-l border-gray-200 bg-gradient-to-b from-orange-50/30 via-white to-pink-50/20 flex flex-col">
-            <!-- 侧栏标题 -->
-            <div class="px-3 py-3 border-b border-gray-100 bg-white/80 sidebar-header-hover group/header">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-gradient-to-br from-orange-400 to-pink-500 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-heart text-white text-[10px]"></i>
-                    </div>
-                    <span class="text-sm font-bold text-gray-700 tracking-tight">支持项目</span>
-                </div>
-                <p class="sidebar-quote text-[10px] text-gray-400 mt-1.5 leading-relaxed italic">若 TrendRadar 曾为你捕捉价值，不妨为它注入动力，助其持续进化</p>
-            </div>
-
-            <!-- 卡片列表 -->
-            <div class="flex-1 p-3 space-y-3 overflow-y-auto sidebar-scroll">
-
-                <!-- 01: 点亮 Star -->
-                <a href="https://github.com/sansan0/TrendRadar" target="_blank" class="sidebar-card group block">
-                    <div class="flex items-center gap-2 mb-2.5">
-                        <div class="sidebar-card-icon bg-orange-100 text-orange-500 group-hover:bg-orange-200">
-                            <i class="fa-solid fa-star"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold text-gray-800 leading-tight">点亮 Star</div>
-                            <div class="text-[10px] text-gray-400 leading-tight mt-0.5">让更多人发现它</div>
-                        </div>
-                    </div>
-                    <div class="sidebar-cta bg-gradient-to-r from-orange-400 to-red-500 text-white group-hover:from-orange-500 group-hover:to-red-600 shadow-sm group-hover:shadow-md">
-                        <i class="fa-brands fa-github mr-1"></i>前往 GitHub
-                    </div>
-                </a>
-
-                <!-- 02: 不迷路 (微信) -->
-                <div class="sidebar-card sidebar-card-clickable group" onclick="openQrModal('weixin')">
-                    <div class="flex items-center gap-2 mb-2.5">
-                        <div class="sidebar-card-icon bg-green-100 text-green-600 group-hover:bg-green-200">
-                            <i class="fa-brands fa-weixin"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold text-gray-800 leading-tight">不迷路</div>
-                            <div class="text-[10px] text-gray-400 leading-tight mt-0.5">获取更新通知</div>
-                        </div>
-                    </div>
-                    <div class="flex justify-center relative">
-                        <div class="sidebar-qr group-hover:shadow-md">
-                            <img src="./assets/weixin.webp" alt="微信公众号" class="w-full h-full object-contain">
-                        </div>
-                        <div class="sidebar-enlarge-hint">
-                            <i class="fa-solid fa-expand mr-1"></i>点击放大
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-400 text-center mt-2">扫码关注公众号</p>
-                </div>
-
-                <!-- 03: 随心赞赏 -->
-                <div class="sidebar-card sidebar-card-clickable group" onclick="openQrModal('donate')">
-                    <div class="flex items-center gap-2 mb-2.5">
-                        <div class="sidebar-card-icon bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200">
-                            <i class="fa-solid fa-hand-holding-heart"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold text-gray-800 leading-tight">随心赞赏</div>
-                            <div class="text-[10px] text-gray-400 leading-tight mt-0.5">1 元也是鼓励</div>
-                        </div>
-                    </div>
-                    <div class="flex justify-center relative">
-                        <div class="sidebar-qr group-hover:shadow-md">
-                            <img src="https://cdn-1258574687.cos.ap-shanghai.myqcloud.com/img/%2F2026%2F01%2F18ecce7c224ce0ea4c59394c29e408f8-e0d1db45.webp" alt="微信支付" class="w-full h-full object-contain">
-                        </div>
-                        <div class="sidebar-enlarge-hint">
-                            <i class="fa-solid fa-expand mr-1"></i>点击放大
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-400 text-center mt-2">微信扫码 · 丰俭由人</p>
-                </div>
-
-                <!-- 04: 探索更多 -->
-                <a href="https://sansan0.github.io/mao-map/" target="_blank" class="sidebar-card group block">
-                    <div class="flex items-center gap-2 mb-2.5">
-                        <div class="sidebar-card-icon bg-red-100 text-red-500 group-hover:bg-red-200">
-                            <i class="fa-solid fa-map-location-dot"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold text-gray-800 leading-tight">探索更多</div>
-                            <div class="text-[10px] text-gray-400 leading-tight mt-0.5">另一个用心的作品</div>
-                        </div>
-                    </div>
-                    <div class="sidebar-cta bg-red-50 text-red-600 border border-red-100 group-hover:bg-red-100 group-hover:text-red-700">
-                        <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>去看看
-                    </div>
-                </a>
-            </div>
-
-            <!-- 底部寄语 -->
-            <div class="px-3 py-2.5 border-t border-gray-100 bg-white/60">
-                <p class="text-[10px] text-gray-300 text-center italic font-serif tracking-wide">"开源不易，感谢支持"</p>
-            </div>
-            </div>
-        </div>
+         
         </div>
     </main>
 

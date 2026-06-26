@@ -19,6 +19,7 @@ def prepare_report_data(
     mode: str = "daily",
     rank_threshold: int = 3,
     show_new_section: bool = True,
+    pinned_keywords: Optional[set] = None,
 ) -> Dict:
     """
     准备报告数据
@@ -31,6 +32,7 @@ def prepare_report_data(
         mode: 报告模式 (daily/incremental/current)
         rank_threshold: 排名阈值
         show_new_section: 是否显示新增热点区域
+        pinned_keywords: 固定词组 display_name 集合；count==0 的固定词组保留并标记 pinned=True
 
     Returns:
         Dict: 准备好的报告数据
@@ -98,9 +100,11 @@ def prepare_report_data(
                     }
                 )
 
+    pinned_set = pinned_keywords or set()
     processed_stats = []
     for stat in stats:
-        if stat["count"] <= 0:
+        is_pinned = stat["count"] <= 0 and stat["word"] in pinned_set
+        if stat["count"] <= 0 and not is_pinned:
             continue
 
         processed_titles = []
@@ -119,14 +123,21 @@ def prepare_report_data(
             }
             processed_titles.append(processed_title)
 
-        processed_stats.append(
-            {
-                "word": stat["word"],
-                "count": stat["count"],
-                "percentage": stat.get("percentage", 0),
-                "titles": processed_titles,
-            }
-        )
+        entry = {
+            "word": stat["word"],
+            "count": stat["count"],
+            "percentage": stat.get("percentage", 0),
+            "titles": processed_titles,
+        }
+        if is_pinned:
+            entry["pinned"] = True
+        processed_stats.append(entry)
+
+    # 固定词组未命中告警：匹配不到已加载词组（别名写错或词组仍被注释）→ 告警跳过，不中断
+    if pinned_set:
+        matched = {stat["word"] for stat in stats if stat["word"] in pinned_set}
+        for kw in sorted(pinned_set - matched):
+            print(f"[pinned] '{kw}' 未匹配到任何词组，跳过")
 
     # total_new_count 始终从过滤结果计算（用于头部统计），不受 hide_new_section 影响
     total_new_count = sum(len(titles) for titles in filtered_new_titles.values())
@@ -137,6 +148,47 @@ def prepare_report_data(
         "failed_ids": failed_ids or [],
         "total_new_count": total_new_count,
     }
+
+
+def enrich_rss_stats_with_pinned(
+    rss_stats: Optional[List[Dict]],
+    pinned_keywords: Optional[set],
+) -> List[Dict]:
+    """为 RSS 关键词统计补充固定空词组占位（count==0）。
+
+    count_rss_frequency（analyzer）在 count==0 时丢弃词组（analyzer.py:672），
+    固定词组因此不会出现在 rss_items。此处按 display_name 重新注入固定空词组
+    占位（pinned=True），使 RSS feed-group 渲染占位行（设计 §3/§5）。不改 analyzer（§4）。
+
+    静默执行（不告警）：固定词组本轮 0 条 RSS 匹配是正常情况；真正未命中
+    （无对应词组）的告警已由 prepare_report_data 在热榜路径发出，避免重复告警。
+
+    Args:
+        rss_stats: RSS 关键词统计列表（与热榜 stats 同构），可为 None
+        pinned_keywords: 固定词组 display_name 集合
+
+    Returns:
+        新的统计列表（不可变：不修改入参）
+    """
+    pinned_set = pinned_keywords or set()
+    if not rss_stats:
+        rss_stats = []
+    if not pinned_set:
+        return list(rss_stats)
+
+    existing_words = {stat.get("word") for stat in rss_stats}
+    enriched = list(rss_stats)
+    for kw in sorted(pinned_set):
+        if kw in existing_words:
+            continue
+        enriched.append({
+            "word": kw,
+            "count": 0,
+            "titles": [],
+            "percentage": 0,
+            "pinned": True,
+        })
+    return enriched
 
 
 def generate_html_report(
@@ -154,6 +206,7 @@ def generate_html_report(
     render_html_func: Optional[Callable] = None,
     report_metadata: Optional[Dict] = None,
     translate_report_func: Optional[Callable] = None,
+    pinned_keywords: Optional[set] = None,
 ) -> str:
     """
     生成 HTML 报告
@@ -196,6 +249,7 @@ def generate_html_report(
         id_to_name,
         mode,
         rank_threshold,
+        pinned_keywords=pinned_keywords,
     )
 
     # 翻译热榜 report_data（stats/new_titles）——在 prepare_report_data 过滤之后翻译，

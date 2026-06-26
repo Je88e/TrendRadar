@@ -23,6 +23,7 @@ from trendradar.report.html import render_html_content
 from trendradar.report.generator import (
     prepare_report_data,
     generate_html_report,
+    enrich_rss_stats_with_pinned,
 )
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     # 报告生成器
     "prepare_report_data",
     "generate_html_report",
+    enrich_rss_stats_with_pinned,
 ]

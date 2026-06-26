@@ -11,12 +11,12 @@ RUN set -ex && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     case ${TARGETARCH} in \
     amd64) \
-    export SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64; \
+    export SUPERCRONIC_URL=https://gh-proxy.com/https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64; \
     export SUPERCRONIC_SHA1SUM=c98bbf82c5f648aaac8708c182cc83046fe48423; \
     export SUPERCRONIC=supercronic-linux-amd64; \
     ;; \
     arm64) \
-    export SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-arm64; \
+    export SUPERCRONIC_URL=https://gh-proxy.com/https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-arm64; \
     export SUPERCRONIC_SHA1SUM=5ef4ccc3d43f12d0f6c3763758bc37cc4e5af76e; \
     export SUPERCRONIC=supercronic-linux-arm64; \
     ;; \

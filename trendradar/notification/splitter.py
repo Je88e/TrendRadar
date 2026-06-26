@@ -203,6 +203,8 @@ def split_content_into_batches(
     total_hotlist_count = sum(
         len(stat["titles"]) for stat in report_data["stats"] if stat["count"] > 0
     )
+    # 固定空词组（count==0）不进通知：渲染/序列号/最热话题均只看非空 stats
+    visible_stats = [s for s in report_data["stats"] if s["count"] > 0]
     total_titles = total_hotlist_count
     
     # 累加 RSS 条目数
@@ -297,7 +299,7 @@ def split_content_into_batches(
     base_header += f"{b_s}类型：{b_e} {report_type}\n"
     base_header += f"{b_s}时间：{b_e} {now.strftime('%Y-%m-%d %H:%M:%S')}\n"
 
-    top_words = report_data.get("stats", [])[:3]
+    top_words = visible_stats[:3]
     if top_words:
         topics = " | ".join(f"{s['word']}({s['count']})" for s in top_words)
         base_header += f"{b_s}最热话题：{b_e} {topics}\n"
@@ -336,7 +338,7 @@ def split_content_into_batches(
     # 根据 display_mode 选择统计标题
     stats_title = "热点词汇统计" if display_mode == "keyword" else "热点新闻统计"
     stats_header = ""
-    if report_data["stats"]:
+    if visible_stats:
         if format_type in ("wework", "bark"):
             stats_header = f"📊 **{stats_title}** (共 {total_hotlist_count} 条)\n\n"
         elif format_type == "telegram":
@@ -356,7 +358,7 @@ def split_content_into_batches(
     # 当没有热榜数据时的处理
     # 注意：如果有 ai_content，不应该返回"暂无匹配"消息，而应该继续处理 AI 内容
     if (
-        not report_data["stats"]
+        not visible_stats
         and not report_data["new_titles"]
         and not report_data["failed_ids"]
         and not ai_content  # 有 AI 内容时不返回"暂无匹配"
@@ -377,10 +379,10 @@ def split_content_into_batches(
     # 定义处理热点词汇统计的函数
     def process_stats_section(current_batch, current_batch_has_content, batches, add_separator=True):
         """处理热点词汇统计"""
-        if not report_data["stats"]:
+        if not visible_stats:
             return current_batch, current_batch_has_content, batches
 
-        total_count = len(report_data["stats"])
+        total_count = len(visible_stats)
 
         # 根据 add_separator 决定是否添加前置分割线
         actual_stats_header = ""
@@ -415,7 +417,7 @@ def split_content_into_batches(
             current_batch_has_content = True
 
         # 逐个处理词组（确保词组标题+第一条新闻的原子性）
-        for i, stat in enumerate(report_data["stats"]):
+        for i, stat in enumerate(visible_stats):
             word = stat["word"]
             count = stat["count"]
             sequence_display = f"[{i + 1}/{total_count}]"
@@ -591,7 +593,7 @@ def split_content_into_batches(
                     current_batch_has_content = True
 
             # 词组间分隔符
-            if i < len(report_data["stats"]) - 1:
+            if i < len(visible_stats) - 1:
                 separator = ""
                 if format_type in ("wework", "bark"):
                     separator = f"\n\n\n\n"

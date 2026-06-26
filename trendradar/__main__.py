@@ -8,6 +8,8 @@ TrendRadar 主程序
 
 import argparse
 import os
+import threading
+import time
 import webbrowser
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -52,7 +54,7 @@ class NewsAnalyzer:
         },
     }
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[Dict] = None, store: "Optional[object]" = None):
         # 使用传入的配置或加载新配置
         if config is None:
             print("正在加载配置...")
@@ -61,24 +63,17 @@ class NewsAnalyzer:
         print(f"监控平台数量: {len(config['PLATFORMS'])}")
         print(f"时区: {config.get('TIMEZONE', DEFAULT_TIMEZONE)}")
 
-        # 创建应用上下文
-        self.ctx = AppContext(config)
+        # 创建应用上下文（首周期快照；store 模式下每周期由 _refresh_derived 换新）
+        self._ctx_snapshot = AppContext(config)
+        # ConfigStore（serve 模式注入）：持有则每周期 run() 顶部从 store.get() 取新 ctx
+        self.store = store
 
-        self.request_interval = self.ctx.config["REQUEST_INTERVAL"]
-        self.report_mode = self.ctx.config["REPORT_MODE"]
         self.frequency_file = None
         self.filter_method = None  # None=使用全局配置 ctx.filter_method
         self.interests_file = None  # None=使用全局配置 ai_filter.interests_file
-        self.rank_threshold = self.ctx.rank_threshold
         self.is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
         self.is_docker_container = self._detect_docker_environment()
         self.update_info = None
-        self.proxy_url = None
-        self._setup_proxy()
-        self.data_fetcher = DataFetcher(
-            self.proxy_url,
-            api_url=self.ctx.config.get("PLATFORMS_API_URL") or None,
-        )
 
         # RSS/平台元数据（用于报告头部展示）
         self._rss_source_total = 0
@@ -87,20 +82,42 @@ class NewsAnalyzer:
         self._rss_matched_count = 0
         self._hotlist_total_count = 0
 
-        # 初始化存储管理器（使用 AppContext）
-        self._init_storage_manager()
+        # 派生属性（6 个）从 ctx 读；store 模式下每周期 _refresh_derived 重算
+        self._refresh_derived(self._ctx_snapshot)
+        print(f"存储后端: {self.storage_manager.backend_name}")
+        retention_days = self._ctx_snapshot.config.get("STORAGE", {}).get("RETENTION_DAYS", 0)
+        if retention_days > 0:
+            print(f"数据保留天数: {retention_days} 天")
         # 注意：update_info 由 main() 函数设置，避免重复请求远程版本
 
-    def _init_storage_manager(self) -> None:
-        """初始化存储管理器（使用 AppContext）"""
-        # 获取数据保留天数（支持环境变量覆盖）
-        env_retention = os.environ.get("STORAGE_RETENTION_DAYS", "").strip()
-        if env_retention:
-            # 环境变量覆盖配置
-            self.ctx.config["STORAGE"]["RETENTION_DAYS"] = int(env_retention)
+    @property
+    def ctx(self):
+        """当前周期 ctx 快照（_refresh_derived 每周期换；在飞周期内稳定，下周期取新）。"""
+        return self._ctx_snapshot
 
-        self.storage_manager = self.ctx.get_storage_manager()
-        print(f"存储后端: {self.storage_manager.backend_name}")
+    def _refresh_derived(self, ctx) -> None:
+        """从 ctx 刷新 6 个配置派生属性（每周期开头调用，去 __init__ 缓存）。
+
+        - request_interval / report_mode / rank_threshold：读 ctx.config / ctx.rank_threshold
+        - proxy_url：_setup_proxy 读 ctx.config（USE_PROXY / DEFAULT_PROXY）
+        - data_fetcher：**每周期按当前 proxy_url + PLATFORMS_API_URL 重建**（H1，
+          否则改代理/API 地址下周期不生效）
+        - storage_manager：ctx.get_storage_manager()（模块级全局单例，reload 不重建，
+          STORAGE.* 编辑需重启）
+
+        STORAGE_RETENTION_DAYS env 覆盖已在 load_config 归一化（ADR-0004 §52/H3）。
+        """
+        self._ctx_snapshot = ctx
+        self.request_interval = ctx.config["REQUEST_INTERVAL"]
+        self.report_mode = ctx.config["REPORT_MODE"]
+        self.rank_threshold = ctx.rank_threshold
+        self.proxy_url = None
+        self._setup_proxy()
+        self.data_fetcher = DataFetcher(
+            self.proxy_url,
+            api_url=ctx.config.get("PLATFORMS_API_URL") or None,
+        )
+        self.storage_manager = ctx.get_storage_manager()
 
         retention_days = self.ctx.config.get("STORAGE", {}).get("RETENTION_DAYS", 0)
         if retention_days > 0:
@@ -1623,6 +1640,10 @@ class NewsAnalyzer:
     def run(self) -> None:
         """执行分析流程"""
         try:
+            # serve 模式（store 注入）：每周期开头取新 ctx 快照 + 重算派生属性，
+            # 使在线编辑的配置在下个周期生效；在飞周期内持本快照跑完（drain）。
+            if self.store is not None:
+                self._refresh_derived(self.store.get())
             if not self._initialize_and_check_config():
                 return
 
@@ -1649,6 +1670,70 @@ class NewsAnalyzer:
             # 清理资源（包括过期数据清理和数据库连接关闭）
             self.ctx.cleanup()
 
+    def serve(
+        self,
+        *,
+        poll_interval: float = 60.0,
+        stop_event: "Optional[threading.Event]" = None,
+        sleep_func=time.sleep,
+    ) -> None:
+        """长驻调度循环（``--serve`` 模式）：每 poll_interval 秒 resolve schedule，
+        collect=True 则 run() 一个分析周期，否则跳过；stop_event 置位或 SIGINT 退出。
+
+        要求 ``self.store`` 已注入（每周期从 store.get() 取新 ctx，使在线编辑的
+        配置在下个周期生效）。设计 §3 主线程调度循环即此。
+
+        sleep_func 可注入便于确定性测试（默认 time.sleep；生产下 SIGINT 触发
+        KeyboardInterrupt 中断睡眠 → 退出）。
+        """
+        if self.store is None:
+            raise RuntimeError("serve 需要 ConfigStore（self.store 未注入）")
+        if stop_event is None:
+            stop_event = threading.Event()
+        print(f"[serve] 长驻调度模式启动，轮询间隔 {poll_interval:.0f}s（Ctrl+C 退出）")
+        try:
+            while not stop_event.is_set():
+                ctx = self.store.get()
+                self._refresh_derived(ctx)
+                scheduler = ctx.create_scheduler()
+                schedule = scheduler.resolve()
+                if getattr(schedule, "collect", False):
+                    print("[serve] 调度窗口命中，执行分析周期")
+                    try:
+                        self.run()
+                    except Exception as e:
+                        # 单周期失败不拖垮循环（与 run() 自身 try/except 双保险）
+                        print(f"[serve] 分析周期出错（忽略，下个 tick 继续）: {e}")
+                else:
+                    print("[serve] 当前时间段不执行数据采集，跳过")
+                sleep_func(poll_interval)
+        except KeyboardInterrupt:
+            print("[serve] 收到中断，退出调度循环")
+
+
+def _resolve_config_paths(config_path: Optional[str] = None):
+    """解析 config 路径三件套：(config_path, config_dir, [三文件绝对路径])。
+
+    config_path 默认 = 环境变量 CONFIG_PATH 或 config/config.yaml。三份可在线编辑的
+    配置文件（config.yaml / frequency_words.txt / timeline.yaml）均位于 config_dir。
+    """
+    p = config_path or os.environ.get("CONFIG_PATH", "config/config.yaml")
+    config_dir = str(Path(p).parent)
+    names = ("config.yaml", "frequency_words.txt", "timeline.yaml")
+    paths = [str(Path(config_dir) / n) for n in names]
+    return p, config_dir, paths
+
+
+def _read_admin_env():
+    """读管理后台 env：ADMIN_ENABLED / ADMIN_HOST / WEBSERVER_PORT。"""
+    enabled = os.environ.get("ADMIN_ENABLED", "true").lower() != "false"
+    host = os.environ.get("ADMIN_HOST", "127.0.0.1")
+    try:
+        port = int(os.environ.get("WEBSERVER_PORT", "8080"))
+    except ValueError:
+        port = 8080
+    return enabled, host, port
+
 
 def main():
     """主程序入口"""
@@ -1672,6 +1757,11 @@ def main():
     parser.add_argument("--show-schedule", action="store_true", help="显示当前调度状态")
     parser.add_argument("--doctor", action="store_true", help="运行环境与配置体检")
     parser.add_argument("--test-notification", action="store_true", help="发送测试通知到已配置渠道")
+    parser.add_argument(
+        "--serve",
+        action="store_true",
+        help="长驻调度模式：内嵌管理后台(:8080) + 文件轮询重载，在线编辑保存即生效",
+    )
 
     args = parser.parse_args()
 
@@ -1702,6 +1792,44 @@ def main():
         remote_version = None
         if version_url:
             need_update, remote_version = check_all_versions(version_url, configs_version_url)
+
+        # --serve：长驻调度模式，内嵌管理后台 + 文件轮询重载（设计 §3/§4.2）
+        if args.serve:
+            from trendradar.admin.server import run_admin
+            from trendradar.admin.store import ConfigStore
+            from trendradar.admin.watcher import ConfigWatcher
+
+            config_path, config_dir, watch_paths = _resolve_config_paths()
+            initial_ctx = AppContext(config)
+            store = ConfigStore(
+                initial_ctx,
+                lambda: AppContext(load_config(config_path, quiet=True)),
+            )
+            watcher = ConfigWatcher(paths=watch_paths, reload_callback=store.reload)
+            admin_enabled, admin_host, webserver_port = _read_admin_env()
+            if admin_enabled:
+                report_dir = str(Path("output"))
+                run_admin(
+                    admin_host, webserver_port, store,
+                    config_dir=config_dir, output_dir=report_dir,
+                )
+                print(f"[serve] 报告首页: http://{admin_host}:{webserver_port}/")
+                print(f"[serve] 归档报告: http://{admin_host}:{webserver_port}/html/")
+                print(f"[serve] 管理后台: http://{admin_host}:{webserver_port}/admin/（编辑保存即生效）")
+            else:
+                print("[serve] 管理后台已通过 ADMIN_ENABLED=false 关闭")
+            watcher.start()
+            analyzer = NewsAnalyzer(config=config, store=store)
+            if analyzer.is_github_actions and need_update and remote_version:
+                analyzer.update_info = {
+                    "current_version": __version__,
+                    "remote_version": remote_version,
+                }
+            try:
+                analyzer.serve()
+            finally:
+                watcher.stop()
+            return
 
         analyzer = NewsAnalyzer(config=config)
 
