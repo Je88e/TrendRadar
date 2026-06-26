@@ -746,6 +746,24 @@ def render_html_content(
             }
 
             .hotlist-section { /* */ }
+            
+            .hotlist-section-header {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                margin-bottom: 18px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid var(--signal);
+            }
+            
+            .hotlist-section-title {
+                font-family: var(--font-display);
+                font-size: 20px;
+                font-weight: 600;
+                font-variation-settings: "opsz" 60;
+                color: var(--signal);
+                letter-spacing: -0.01em;
+            }
 
             /* ===== New items ===== */
             .new-section {
@@ -1797,7 +1815,11 @@ def render_html_content(
     # 给热榜统计添加外层包装
     if stats_html:
         stats_html = f"""
-                <div class="hotlist-section">{tab_bar_html}{stats_html}
+                <div class="hotlist-section">
+                    <div class="hotlist-section-header">
+                        <div class="hotlist-section-title">热榜平台</div>
+                    </div>
+                    {tab_bar_html}{stats_html} 
                 </div>"""
 
     # 生成新增新闻区域的HTML
