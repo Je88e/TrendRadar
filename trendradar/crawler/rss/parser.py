@@ -9,9 +9,12 @@ import re
 import html
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone as _tz
 from typing import List, Optional, Dict, Any
 from email.utils import parsedate_to_datetime
+
+# struct_time 兜底路径按 UTC 标记 aware（见 _parse_date）
+_UTC = _tz.utc
 
 try:
     import feedparser
@@ -274,29 +277,43 @@ class RSSParser:
         return text.strip()
 
     def _parse_date(self, entry: Any) -> Optional[str]:
-        """解析发布日期"""
-        # feedparser 会自动解析日期到 published_parsed
-        date_struct = entry.get("published_parsed") or entry.get("updated_parsed")
+        """解析发布日期为 ISO 字符串，尽量保留时区信息。
 
-        if date_struct:
-            try:
-                dt = datetime(*date_struct[:6])
-                return dt.isoformat()
-            except (ValueError, TypeError):
-                pass
+        解析顺序（优先保留源时区偏移，避免后续误判 naive）：
 
-        # 尝试手动解析
+        1. 原始字符串 ``published``/``updated``：
+           - RFC822（``parsedate_to_datetime``）：带偏移则 aware，裸日期则 naive。
+           - ISO / ``YYYY-MM-DD HH:MM:SS``（``fromisoformat``）：同样保留偏移或 naive。
+        2. feedparser ``published_parsed`` struct_time 兜底：feedparser 对带偏移
+           源已转 UTC，对无偏移源为浮动墙钟，struct_time 本身不携带 tz 信号，
+           无法区分 → 统一按 UTC 标记 aware 返回，由下游正确换算。
+
+        关键：foodmate 等 RSS 源 pubDate 为裸 ``2026-06-26 10:43:43``（CST 墙钟），
+        走路径 1 的 fromisoformat → 保留 naive → 下游 (utils.time) 按配置时区
+        墙钟处理，不再误加 8 小时。
+        """
         date_str = entry.get("published") or entry.get("updated")
         if date_str:
+            # RFC822（含偏移则 aware）
             try:
                 dt = parsedate_to_datetime(date_str)
+                if dt is not None:
+                    return dt.isoformat()
+            except (ValueError, TypeError):
+                pass
+
+            # ISO / 裸日期（保留偏移或 naive）
+            try:
+                dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
                 return dt.isoformat()
             except (ValueError, TypeError):
                 pass
 
-            # 尝试 ISO 格式
+        # struct_time 兜底：按 UTC aware 返回（带偏移源已被 feedparser 转 UTC）
+        date_struct = entry.get("published_parsed") or entry.get("updated_parsed")
+        if date_struct:
             try:
-                dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                dt = datetime(*date_struct[:6], tzinfo=_UTC)
                 return dt.isoformat()
             except (ValueError, TypeError):
                 pass

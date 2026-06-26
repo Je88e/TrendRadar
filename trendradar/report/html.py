@@ -1866,7 +1866,7 @@ def render_html_content(
                 </div>"""
 
     # 生成 RSS 统计内容
-    def render_rss_stats_html(stats: List[Dict], title: str = "RSS 订阅更新") -> str:
+    def render_rss_stats_html(stats: List[Dict], title: str = "RSS 订阅") -> str:
         """渲染 RSS 统计区块 HTML
 
         Args:
@@ -2186,7 +2186,8 @@ def render_html_content(
                             <div class="news-content">
                                 <div class="news-header">"""
 
-                # 时间显示（RSS published_at 以 naive-UTC 存储，需按配置时区转换）
+                # 时间显示：aware（带偏移）换算到配置时区；naive（如 foodmate
+                # 裸 CST 墙钟）视作配置时区墙钟原样呈现。详见 utils.time。
                 time_display = format_iso_time_friendly(
                     published_at, timezone, include_date=True
                 )
@@ -2223,8 +2224,14 @@ def render_html_content(
         return standalone_html
 
     # 生成 RSS 统计和新增 HTML
-    rss_stats_html = render_rss_stats_html(rss_items, "RSS 订阅更新") if rss_items else ""
-    rss_new_html = render_rss_stats_html(rss_new_items, "RSS 新增更新") if rss_new_items else ""
+    rss_stats_html = render_rss_stats_html(rss_items, "RSS 订阅") if rss_items else ""
+    # RSS 新增区域随 new_items 区域开关：display.regions.new_items=false 时整体不渲染
+    # （含固定词组占位 → display.regions > 固定词组）。对照热榜新增 html.py:1805 的同款门控。
+    rss_new_html = (
+        render_rss_stats_html(rss_new_items, "RSS 新增更新")
+        if (show_new_section and rss_new_items)
+        else ""
+    )
 
     # 生成独立展示区 HTML
     standalone_html = render_standalone_html(standalone_data)
@@ -2282,11 +2289,7 @@ def render_html_content(
             </div>
 
             <div class="footer">
-                <div class="footer-content">
-                    由 <span class="project-name">TrendRadar</span> 生成 ·
-                    <a href="https://github.com/sansan0/TrendRadar" target="_blank" class="footer-link">
-                        GitHub 开源项目
-                    </a>"""
+                <div class="footer-content">"""
 
     if update_info:
         html += f"""
@@ -3054,11 +3057,11 @@ def render_html_content(
                     });
                 }
 
-                // RSS 订阅更新区
+                // RSS 订阅区
                 var rssSection = document.querySelector('.rss-section');
                 if (rssSection) {
                     var rssSectionTitle = rssSection.querySelector('.rss-section-title');
-                    lines.push('## ' + (rssSectionTitle ? rssSectionTitle.textContent.trim() : 'RSS 订阅更新'));
+                    lines.push('## ' + (rssSectionTitle ? rssSectionTitle.textContent.trim() : 'RSS 订阅'));
                     lines.push('');
                     var feedGroups = rssSection.querySelectorAll('.feed-group');
                     feedGroups.forEach(function(group) {

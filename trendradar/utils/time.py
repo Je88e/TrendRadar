@@ -93,6 +93,52 @@ def convert_time_for_display(time_str: str) -> str:
     return time_str
 
 
+def _parse_iso_to_aware(
+    iso_time: str,
+    timezone: str = DEFAULT_TIMEZONE,
+) -> Optional[datetime]:
+    """
+    将 ISO 格式时间字符串解析为带时区的 datetime。
+
+    - 带时区偏移（含 Z 后缀）→ 保留源时区信息，返回 aware datetime。
+    - 不带时区（naive）→ 视作已处于 ``timezone`` 的墙钟时间并 localize。
+
+    历史 bug：旧实现一律把 naive 当作 UTC，而真实 RSS 源（如 foodmate）
+    发布的裸日期 ``2026-06-26 10:43:43`` 是服务器本地（CST）墙钟，并非
+    UTC，导致显示 / 新鲜度过滤 / 天数计算全部偏 +8 小时。
+
+    Args:
+        iso_time: ISO 格式时间字符串（如 '2025-12-29T00:20:00'、
+            '2025-12-29T00:20:00+00:00'、'2026-06-26 10:43:43'）
+        timezone: naive 输入假定的墙钟时区
+
+    Returns:
+        带时区信息的 datetime；无法解析返回 None
+    """
+    if not iso_time:
+        return None
+
+    # 带时区偏移 / Z → 直接 fromisoformat 保留源时区
+    if "+" in iso_time or iso_time.endswith("Z"):
+        try:
+            return datetime.fromisoformat(iso_time.replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    # naive → 视作目标时区墙钟
+    try:
+        normalized = iso_time.replace("T", " ").split(".")[0]
+        dt = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+
+    try:
+        tz = pytz.timezone(timezone)
+    except pytz.UnknownTimeZoneError:
+        tz = pytz.timezone(DEFAULT_TIMEZONE)
+    return tz.localize(dt)
+
+
 def format_iso_time_friendly(
     iso_time: str,
     timezone: str = DEFAULT_TIMEZONE,
@@ -113,29 +159,7 @@ def format_iso_time_friendly(
         return ""
 
     try:
-        # 尝试解析各种 ISO 格式
-        dt = None
-
-        # 尝试解析带时区的格式
-        if "+" in iso_time or iso_time.endswith("Z"):
-            iso_time = iso_time.replace("Z", "+00:00")
-            try:
-                dt = datetime.fromisoformat(iso_time)
-            except ValueError:
-                pass
-
-        # 尝试解析不带时区的格式（假设为 UTC）
-        if dt is None:
-            try:
-                # 处理 T 分隔符
-                if "T" in iso_time:
-                    dt = datetime.fromisoformat(iso_time.replace("T", " ").split(".")[0])
-                else:
-                    dt = datetime.fromisoformat(iso_time.split(".")[0])
-                # 假设为 UTC 时间
-                dt = pytz.UTC.localize(dt)
-            except ValueError:
-                pass
+        dt = _parse_iso_to_aware(iso_time, timezone)
 
         if dt is None:
             # 无法解析，返回原始字符串的简化版本
@@ -200,26 +224,7 @@ def is_within_days(
         return True  # max_days=0 表示禁用过滤
 
     try:
-        dt = None
-
-        # 尝试解析带时区的格式
-        if "+" in iso_time or iso_time.endswith("Z"):
-            iso_time_normalized = iso_time.replace("Z", "+00:00")
-            try:
-                dt = datetime.fromisoformat(iso_time_normalized)
-            except ValueError:
-                pass
-
-        # 尝试解析不带时区的格式（假设为 UTC）
-        if dt is None:
-            try:
-                if "T" in iso_time:
-                    dt = datetime.fromisoformat(iso_time.replace("T", " ").split(".")[0])
-                else:
-                    dt = datetime.fromisoformat(iso_time.split(".")[0])
-                dt = pytz.UTC.localize(dt)
-            except ValueError:
-                pass
+        dt = _parse_iso_to_aware(iso_time, timezone)
 
         if dt is None:
             # 无法解析时间，保留文章
@@ -254,26 +259,7 @@ def calculate_days_old(iso_time: str, timezone: str = DEFAULT_TIMEZONE) -> Optio
         return None
 
     try:
-        dt = None
-
-        # 尝试解析带时区的格式
-        if "+" in iso_time or iso_time.endswith("Z"):
-            iso_time_normalized = iso_time.replace("Z", "+00:00")
-            try:
-                dt = datetime.fromisoformat(iso_time_normalized)
-            except ValueError:
-                pass
-
-        # 尝试解析不带时区的格式（假设为 UTC）
-        if dt is None:
-            try:
-                if "T" in iso_time:
-                    dt = datetime.fromisoformat(iso_time.replace("T", " ").split(".")[0])
-                else:
-                    dt = datetime.fromisoformat(iso_time.split(".")[0])
-                dt = pytz.UTC.localize(dt)
-            except ValueError:
-                pass
+        dt = _parse_iso_to_aware(iso_time, timezone)
 
         if dt is None:
             return None

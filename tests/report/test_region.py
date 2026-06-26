@@ -7,7 +7,11 @@ active 项字段镜像 _get_active_region_classify_results_impl 输出。
 
 import pytest
 
-from trendradar.report.region import build_region_map_payload, render_region_map_html
+from trendradar.report.region import (
+    build_region_map_payload,
+    render_region_map_html,
+    _safe_json_for_script,
+)
 
 
 def _item(
@@ -647,3 +651,58 @@ class TestBuildRegionMapPayloadFilter:
         )
         codes = {c["code"] for c in payload["world"]}
         assert codes == {"JP"}
+
+
+class TestSafeJsonForScript:
+    """_safe_json_for_script 序列化契约直接测试。
+
+    回归锁定：.replace 的搜索串曾被清成空串，U+2028/2029 转义文本注入到
+    每个字符之间，整个 payload 被破坏（中文与 ASCII 全断）。此处直接钉死
+    序列化器契约，远离 render 层的间接症状。
+    """
+
+    # 用 chr() 构造分隔符与转义前缀，避免源码混入不可见字符或反斜杠转义
+    _LS = chr(0x2028)        # U+2028 LINE SEPARATOR
+    _PS = chr(0x2029)        # U+2029 PARAGRAPH SEPARATOR
+    _ESC = chr(0x5c) + "u"   # 反斜杠 + u，拼出 < /   等转义文本
+
+    def test_chinese_preserved_intact(self):
+        """中文作为连续子串保留，不被插断。"""
+        s = _safe_json_for_script({"name": "广东省广州市"})
+        assert "广东省广州市" in s
+
+    def test_ascii_not_interleaved(self):
+        """纯 ASCII 不被 U+2028/2029 转义文本插断（空串 replace 回归的精确锁定）。"""
+        s = _safe_json_for_script({"name": "China"})
+        assert "China" in s
+        assert (self._ESC + "2028") not in s
+        assert (self._ESC + "2029") not in s
+
+    def test_angle_brackets_escaped(self):
+        """< > → 转义文本，防 </script> 注入。"""
+        s = _safe_json_for_script({"t": "</script><img>"})
+        assert "<" not in s
+        assert ">" not in s
+        assert (self._ESC + "003c") in s
+        assert (self._ESC + "003e") in s
+
+    def test_line_paragraph_separators_escaped(self):
+        """真实 U+2028/2029 → 转义文本，裸分隔符不再出现。"""
+        s = _safe_json_for_script({"t": "a" + self._LS + "b" + self._PS + "c"})
+        assert self._LS not in s
+        assert self._PS not in s
+        assert (self._ESC + "2028") in s
+        assert (self._ESC + "2029") in s
+
+    def test_round_trip_restores_original(self):
+        """转义可逆：还原转义后 JSON parse 得回原对象（信息无损）。"""
+        import json as _json
+        obj = {"city": "广州市", "t": "a</script>b" + self._LS + "c"}
+        s = _safe_json_for_script(obj)
+        restored = _json.loads(
+            s.replace(self._ESC + "003c", "<")
+             .replace(self._ESC + "003e", ">")
+             .replace(self._ESC + "2028", self._LS)
+             .replace(self._ESC + "2029", self._PS)
+        )
+        assert restored == obj

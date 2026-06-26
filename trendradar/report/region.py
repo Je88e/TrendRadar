@@ -263,8 +263,8 @@ def _safe_json_for_script(obj: Any) -> str:
     return (
         raw.replace("<", "\\u003c")
         .replace(">", "\\u003e")
-        .replace(" ", "\\u2028")
-        .replace(" ", "\\u2029")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
     )
 
 
@@ -410,8 +410,13 @@ def render_region_map_html(payload: Dict[str, Any]) -> str:
             });
           }
 
+          // DataV Aliyun OSS 有 Referer 防盗链：localhost/datav 自有域放行，
+          // 其他 Referer（含 Docker 服务器 IP/域名）→ 403。服务端无 Referer → 200。
+          // 故 DataV 抓取强制 no-referrer，浏览器不发 Referer，绕过防盗链白名单。
+          // 仅作用于 loadJson（DataV 专用路径）；loadJsonFirst（jsdelivr/npm 等
+          // 公共 CDN）无防盗链，保持默认。
           function loadJson(url, ok, fail){
-            fetch(url, {cache:'force-cache'}).then(function(r){
+            fetch(url, {cache:'force-cache', referrerPolicy:'no-referrer'}).then(function(r){
               if(!r.ok) throw new Error('HTTP '+r.status);
               return r.json();
             }).then(ok).catch(function(e){
